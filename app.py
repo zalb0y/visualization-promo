@@ -192,7 +192,7 @@ def main():
     try:
         data = load_data('all_summary.xlsx')
     except FileNotFoundError:
-        st.error(⚠️ File 'all_summary.xlsx' tidak ditemukan. Pastikan file berada di direktori yang sama dengan app.py")
+        st.error("⚠️ File 'all_summary.xlsx' tidak ditemukan. Pastikan file berada di direktori yang sama dengan app.py")
         st.stop()
     
     # Sidebar Filters
