@@ -419,8 +419,8 @@ def main():
     
     st.plotly_chart(fig1, use_container_width=True)
     
-    # ==================== CHART 2: NOC dan Visit Customer (DUAL CHART - TERPISAH) ====================
-    st.markdown('<p class="section-title">👥 NOC dan Visit Customer</p>', unsafe_allow_html=True)
+    # ==================== CHART 2: NOC dan Visit Customer (SINGLE SCALE LINE CHART) ====================
+    st.markdown('<p class="section-title">👥 Perbandingan NOC dan Visit Customer</p>', unsafe_allow_html=True)
     
     if view_option == 'Monthly':
         chart2_data = filtered_df.groupby('Month', observed=True).agg({
@@ -440,106 +440,75 @@ def main():
     chart2_data['Conversion_Rate'] = (chart2_data['NOC'] / chart2_data['Visit Customer'] * 100)
     chart2_data['Conversion_Label'] = chart2_data['Conversion_Rate'].apply(lambda x: f'{x:.2f}%')
     
-    # Dual Chart Side by Side
-    col_noc, col_visit = st.columns(2)
+    # Single Line Chart dengan satu skala
+    fig2 = go.Figure()
     
-    # Chart NOC
-    with col_noc:
-        fig_noc = go.Figure()
-        
-        fig_noc.add_trace(
-            go.Bar(
-                x=chart2_data['X_Label'],
-                y=chart2_data['NOC'],
-                name='NOC',
-                marker=dict(
-                    color=chart2_data['NOC'],
-                    colorscale=[[0, '#00f5d4'], [0.5, '#00d4ff'], [1, '#0077b6']],
-                    line=dict(color='rgba(255,255,255,0.3)', width=1)
-                ),
-                text=chart2_data['NOC_Label'],
-                textposition='outside',
-                textfont=dict(color='#00f5d4', size=11),
-                hovertemplate='<b>%{x}</b><br>NOC: %{y:,.0f}<extra></extra>'
-            )
+    # Line NOC
+    fig2.add_trace(
+        go.Scatter(
+            x=chart2_data['X_Label'],
+            y=chart2_data['NOC'],
+            name='NOC',
+            mode='lines+markers+text',
+            line=dict(color='#00f5d4', width=4),
+            marker=dict(size=12, color='#00f5d4', symbol='circle',
+                       line=dict(color='#ffffff', width=2)),
+            text=chart2_data['NOC_Label'],
+            textposition='top center',
+            textfont=dict(color='#00f5d4', size=11),
+            hovertemplate='<b>%{x}</b><br>NOC: %{y:,.0f}<extra></extra>'
         )
-        
-        fig_noc.update_layout(
-            paper_bgcolor='rgba(0,0,0,0)',
-            plot_bgcolor='rgba(0,0,0,0)',
-            font=dict(color='#ffffff', family='Poppins'),
-            title=dict(
-                text='📈 Number of Customer (NOC)',
-                font=dict(size=16, color='#00f5d4'),
-                x=0.5
-            ),
-            xaxis_title=x_title,
-            yaxis_title='NOC',
-            height=400,
-            margin=dict(l=60, r=40, t=80, b=60),
-            bargap=0.3
-        )
-        
-        fig_noc.update_xaxes(
-            gridcolor='rgba(255,255,255,0.1)',
-            tickfont=dict(color='#ffffff', size=10)
-        )
-        fig_noc.update_yaxes(
-            gridcolor='rgba(255,255,255,0.1)',
-            tickfont=dict(color='#00f5d4', size=10),
-            title_font=dict(color='#00f5d4', size=12)
-        )
-        
-        st.plotly_chart(fig_noc, use_container_width=True)
+    )
     
-    # Chart Visit Customer
-    with col_visit:
-        fig_visit = go.Figure()
-        
-        fig_visit.add_trace(
-            go.Bar(
-                x=chart2_data['X_Label'],
-                y=chart2_data['Visit Customer'],
-                name='Visit Customer',
-                marker=dict(
-                    color=chart2_data['Visit Customer'],
-                    colorscale=[[0, '#f15bb5'], [0.5, '#9b5de5'], [1, '#7b2cbf']],
-                    line=dict(color='rgba(255,255,255,0.3)', width=1)
-                ),
-                text=chart2_data['Visit_Label'],
-                textposition='outside',
-                textfont=dict(color='#f15bb5', size=11),
-                hovertemplate='<b>%{x}</b><br>Visit: %{y:,.0f}<extra></extra>'
-            )
+    # Line Visit Customer
+    fig2.add_trace(
+        go.Scatter(
+            x=chart2_data['X_Label'],
+            y=chart2_data['Visit Customer'],
+            name='Visit Customer',
+            mode='lines+markers+text',
+            line=dict(color='#f15bb5', width=4),
+            marker=dict(size=12, color='#f15bb5', symbol='diamond',
+                       line=dict(color='#ffffff', width=2)),
+            text=chart2_data['Visit_Label'],
+            textposition='top center',
+            textfont=dict(color='#f15bb5', size=11),
+            hovertemplate='<b>%{x}</b><br>Visit: %{y:,.0f}<extra></extra>'
         )
-        
-        fig_visit.update_layout(
-            paper_bgcolor='rgba(0,0,0,0)',
-            plot_bgcolor='rgba(0,0,0,0)',
-            font=dict(color='#ffffff', family='Poppins'),
-            title=dict(
-                text='🏪 Visit Customer',
-                font=dict(size=16, color='#f15bb5'),
-                x=0.5
-            ),
-            xaxis_title=x_title,
-            yaxis_title='Visit Customer',
-            height=400,
-            margin=dict(l=60, r=40, t=80, b=60),
-            bargap=0.3
-        )
-        
-        fig_visit.update_xaxes(
-            gridcolor='rgba(255,255,255,0.1)',
-            tickfont=dict(color='#ffffff', size=10)
-        )
-        fig_visit.update_yaxes(
-            gridcolor='rgba(255,255,255,0.1)',
-            tickfont=dict(color='#f15bb5', size=10),
-            title_font=dict(color='#f15bb5', size=12)
-        )
-        
-        st.plotly_chart(fig_visit, use_container_width=True)
+    )
+    
+    fig2.update_layout(
+        paper_bgcolor='rgba(0,0,0,0)',
+        plot_bgcolor='rgba(0,0,0,0)',
+        font=dict(color='#ffffff', family='Poppins'),
+        xaxis_title=x_title,
+        yaxis_title='Jumlah',
+        legend=dict(
+            orientation="h", 
+            yanchor="bottom", 
+            y=1.02, 
+            xanchor="center", 
+            x=0.5,
+            font=dict(color='#ffffff', size=12),
+            bgcolor='rgba(0,0,0,0.3)'
+        ),
+        hovermode='x unified',
+        height=450,
+        margin=dict(l=80, r=40, t=80, b=80)
+    )
+    
+    fig2.update_xaxes(
+        gridcolor='rgba(255,255,255,0.1)',
+        tickfont=dict(color='#ffffff', size=11),
+        title_font=dict(color='#ffffff', size=13)
+    )
+    fig2.update_yaxes(
+        gridcolor='rgba(255,255,255,0.1)',
+        tickfont=dict(color='#ffffff', size=11),
+        title_font=dict(color='#ffffff', size=13)
+    )
+    
+    st.plotly_chart(fig2, use_container_width=True)
     
     # ==================== CHART 3: CONVERSION RATE (NOC / Visit Customer) ====================
     st.markdown('<p class="section-title">🎯 Conversion Rate (NOC / Visit Customer)</p>', unsafe_allow_html=True)
