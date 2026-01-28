@@ -13,86 +13,120 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Custom CSS
+# Custom CSS - Dark Theme dengan kontras tinggi
 st.markdown("""
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap');
     
     html, body, [class*="css"] {
         font-family: 'Poppins', sans-serif;
     }
     
+    .stApp {
+        background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+    }
+    
     .main-header {
-        font-size: 2.5rem;
-        font-weight: 700;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        font-size: 2.8rem;
+        font-weight: 800;
+        background: linear-gradient(135deg, #00d4ff 0%, #7b2cbf 50%, #ff6b6b 100%);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
         text-align: center;
-        padding: 1rem 0;
+        padding: 1.5rem 0;
         margin-bottom: 0.5rem;
+        text-shadow: 0 0 30px rgba(0,212,255,0.3);
     }
     
     .sub-header {
-        font-size: 1rem;
-        color: #6b7280;
+        font-size: 1.1rem;
+        color: #a0aec0;
         text-align: center;
         margin-bottom: 2rem;
+        letter-spacing: 1px;
     }
     
-    .metric-card {
-        background: linear-gradient(135deg, #f5f7fa 0%, #e4e8ec 100%);
-        border-radius: 16px;
+    .metric-container {
+        background: linear-gradient(145deg, #1e2a4a 0%, #2d3a5a 100%);
+        border-radius: 20px;
         padding: 1.5rem;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-        border-left: 4px solid;
-        transition: transform 0.3s ease;
+        border: 1px solid rgba(255,255,255,0.1);
+        box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+        text-align: center;
+        transition: all 0.3s ease;
     }
     
-    .metric-card:hover {
+    .metric-container:hover {
         transform: translateY(-5px);
+        box-shadow: 0 12px 40px rgba(0,212,255,0.2);
+        border-color: rgba(0,212,255,0.3);
     }
     
     .metric-value {
-        font-size: 1.8rem;
+        font-size: 2rem;
         font-weight: 700;
-        color: #1f2937;
+        background: linear-gradient(135deg, #00d4ff 0%, #7b2cbf 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
     }
     
     .metric-label {
-        font-size: 0.85rem;
-        color: #6b7280;
+        font-size: 0.9rem;
+        color: #a0aec0;
         text-transform: uppercase;
-        letter-spacing: 0.5px;
+        letter-spacing: 1.5px;
+        margin-top: 0.5rem;
     }
     
     .chart-container {
-        background: white;
-        border-radius: 16px;
+        background: linear-gradient(145deg, #1e2a4a 0%, #252f4a 100%);
+        border-radius: 20px;
         padding: 1.5rem;
-        box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        border: 1px solid rgba(255,255,255,0.08);
+        box-shadow: 0 8px 32px rgba(0,0,0,0.2);
         margin-bottom: 1.5rem;
     }
     
-    .chart-title {
-        font-size: 1.2rem;
+    .section-title {
+        font-size: 1.4rem;
         font-weight: 600;
-        color: #374151;
+        color: #ffffff;
         margin-bottom: 1rem;
-    }
-    
-    .sidebar .sidebar-content {
-        background: linear-gradient(180deg, #667eea 0%, #764ba2 100%);
+        padding-left: 0.5rem;
+        border-left: 4px solid #00d4ff;
     }
     
     div[data-testid="stMetricValue"] {
-        font-size: 1.5rem;
-        font-weight: 600;
+        font-size: 1.8rem;
+        font-weight: 700;
+        color: #00d4ff !important;
     }
     
-    .stSelectbox label, .stMultiSelect label {
+    div[data-testid="stMetricLabel"] {
+        color: #a0aec0 !important;
+    }
+    
+    .stSelectbox label, .stMultiSelect label, .stRadio label {
         font-weight: 500;
-        color: #374151;
+        color: #ffffff !important;
+    }
+    
+    .stSidebar {
+        background: linear-gradient(180deg, #1a1a2e 0%, #16213e 100%);
+    }
+    
+    .stSidebar [data-testid="stMarkdownContainer"] p {
+        color: #ffffff;
+    }
+    
+    .stExpander {
+        background: linear-gradient(145deg, #1e2a4a 0%, #252f4a 100%);
+        border: 1px solid rgba(255,255,255,0.1);
+        border-radius: 10px;
+    }
+    
+    hr {
+        border-color: rgba(255,255,255,0.1);
     }
 </style>
 """, unsafe_allow_html=True)
@@ -147,25 +181,65 @@ def format_number(value):
     else:
         return f"{value:,.0f}"
 
-# Color palette
+def format_short_rupiah(value):
+    if value >= 1e12:
+        return f"{value/1e12:.1f}T"
+    elif value >= 1e9:
+        return f"{value/1e9:.1f}M"
+    elif value >= 1e6:
+        return f"{value/1e6:.0f}Jt"
+    else:
+        return f"{value:,.0f}"
+
+# Color palette - Vibrant colors for dark theme
 COLORS = {
-    'primary': '#667eea',
-    'secondary': '#764ba2',
-    'accent': '#f093fb',
-    'success': '#10b981',
-    'warning': '#f59e0b',
-    'danger': '#ef4444',
-    'info': '#3b82f6'
+    'primary': '#00d4ff',
+    'secondary': '#7b2cbf',
+    'accent': '#ff6b6b',
+    'success': '#00f5d4',
+    'warning': '#fee440',
+    'danger': '#ff6b6b',
+    'info': '#00bbf9',
+    'purple': '#9b5de5',
+    'pink': '#f15bb5',
+    'orange': '#fb8500'
 }
 
 CATEGORY_COLORS = {
-    11: '#667eea',
-    14: '#764ba2', 
-    17: '#f093fb',
-    19: '#10b981',
-    21: '#f59e0b',
-    26: '#ef4444',
-    27: '#3b82f6'
+    11: '#00d4ff',
+    14: '#9b5de5', 
+    17: '#f15bb5',
+    19: '#00f5d4',
+    21: '#fee440',
+    26: '#ff6b6b',
+    27: '#00bbf9'
+}
+
+CATEGORY_COLORS_LIST = ['#00d4ff', '#9b5de5', '#f15bb5', '#00f5d4', '#fee440', '#ff6b6b', '#00bbf9']
+
+# Chart theme
+CHART_TEMPLATE = {
+    'paper_bgcolor': 'rgba(0,0,0,0)',
+    'plot_bgcolor': 'rgba(0,0,0,0)',
+    'font': {'color': '#ffffff', 'family': 'Poppins'},
+    'title': {'font': {'size': 18, 'color': '#ffffff'}},
+    'xaxis': {
+        'gridcolor': 'rgba(255,255,255,0.1)',
+        'linecolor': 'rgba(255,255,255,0.2)',
+        'tickfont': {'color': '#a0aec0', 'size': 11},
+        'title': {'font': {'color': '#ffffff', 'size': 13}}
+    },
+    'yaxis': {
+        'gridcolor': 'rgba(255,255,255,0.1)',
+        'linecolor': 'rgba(255,255,255,0.2)',
+        'tickfont': {'color': '#a0aec0', 'size': 11},
+        'title': {'font': {'color': '#ffffff', 'size': 13}}
+    },
+    'legend': {
+        'font': {'color': '#ffffff', 'size': 12},
+        'bgcolor': 'rgba(0,0,0,0.3)',
+        'bordercolor': 'rgba(255,255,255,0.2)'
+    }
 }
 
 # Main App
@@ -238,7 +312,7 @@ def main():
         
         st.markdown("---")
         st.markdown("### 📌 Info")
-        st.info(f"Dataset: **{dataset_option}**\nView: **{view_option}**\nCategories: **{len(selected_categories)}**")
+        st.info(f"**Dataset:** {dataset_option}\n\n**View:** {view_option}\n\n**Categories:** {len(selected_categories)}")
     
     # Filter data
     if view_option == 'Monthly':
@@ -253,67 +327,87 @@ def main():
         st.warning("⚠️ Tidak ada data yang sesuai dengan filter. Silakan ubah filter Anda.")
         st.stop()
     
-    # KPI Cards
-    st.markdown("### 📈 Key Performance Indicators")
-    
-    col1, col2, col3, col4 = st.columns(4)
-    
-    total_sales = filtered_df['Sales Amount'].sum()
-    total_noc = filtered_df['NOC'].sum()
-    total_visit = filtered_df['Visit Customer'].mean() if view_option == 'Yearly' else filtered_df['Visit Customer'].iloc[-1] if len(filtered_df) > 0 else 0
-    avg_kontribusi = filtered_df['Kontribusi Promo pada Net Sales'].mean() if 'Kontribusi Promo pada Net Sales' in filtered_df.columns else filtered_df['Kontribusi Sales'].mean()
-    
-    with col1:
-        st.metric(
-            label="💰 Total Sales Amount",
-            value=format_rupiah(total_sales),
-            delta=None
-        )
-    
-    with col2:
-        st.metric(
-            label="👥 Total NOC",
-            value=format_number(total_noc),
-            delta=None
-        )
-    
-    with col3:
-        st.metric(
-            label="🏪 Visit Customer",
-            value=format_number(total_visit),
-            delta=None
-        )
-    
-    with col4:
-        st.metric(
-            label="📊 Avg Kontribusi Promo",
-            value=f"{avg_kontribusi*100:.2f}%",
-            delta=None
-        )
-    
-    st.markdown("---")
-    
-    # Chart 1: Sales Amount (Bar) + Kontribusi (Line) - Combo Chart
-    st.markdown("### 📊 Sales Amount & Kontribusi Promo terhadap Net Sales")
-    
+    # Determine kontribusi column
     kontribusi_col = 'Kontribusi Promo pada Net Sales' if 'Kontribusi Promo pada Net Sales' in filtered_df.columns else 'Kontribusi Sales'
     
+    # Calculate KPIs
+    total_sales = filtered_df['Sales Amount'].sum()
+    total_noc = filtered_df['NOC'].sum()
+    total_qty_promo = filtered_df['Qty Promo'].sum()
+    avg_kontribusi = filtered_df[kontribusi_col].mean() * 100
+    total_net_sales = filtered_df['Net Sales (by Group Category)'].sum()
+    
+    # KPI Cards dengan HTML custom
+    st.markdown("### 📈 Key Performance Indicators")
+    
+    col1, col2, col3, col4, col5 = st.columns(5)
+    
+    with col1:
+        st.markdown(f"""
+        <div class="metric-container">
+            <div class="metric-value">{format_rupiah(total_sales)}</div>
+            <div class="metric-label">💰 Total Sales Amount</div>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    with col2:
+        st.markdown(f"""
+        <div class="metric-container">
+            <div class="metric-value">{format_number(total_noc)}</div>
+            <div class="metric-label">👥 Total NOC</div>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    with col3:
+        st.markdown(f"""
+        <div class="metric-container">
+            <div class="metric-value">{total_qty_promo:,}</div>
+            <div class="metric-label">🎯 Total Qty Promo</div>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    with col4:
+        st.markdown(f"""
+        <div class="metric-container">
+            <div class="metric-value">{avg_kontribusi:.2f}%</div>
+            <div class="metric-label">📊 Avg Kontribusi</div>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    with col5:
+        st.markdown(f"""
+        <div class="metric-container">
+            <div class="metric-value">{format_rupiah(total_net_sales)}</div>
+            <div class="metric-label">💎 Total Net Sales</div>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    st.markdown("<br>", unsafe_allow_html=True)
+    
+    # ==================== CHART 1: Sales Amount + Kontribusi ====================
+    st.markdown('<p class="section-title">📊 Sales Amount & Kontribusi Promo terhadap Net Sales</p>', unsafe_allow_html=True)
+    
     if view_option == 'Monthly':
-        # Aggregate by month
         chart1_data = filtered_df.groupby('Month', observed=True).agg({
             'Sales Amount': 'sum',
             kontribusi_col: 'mean'
         }).reset_index()
-        x_axis = 'Month'
+        chart1_data['Month_Short'] = chart1_data['Month'].astype(str).str.replace(' 2025', '')
+        x_axis = 'Month_Short'
         x_title = 'Bulan'
     else:
         chart1_data = filtered_df.groupby('Category').agg({
             'Sales Amount': 'sum',
             kontribusi_col: 'mean'
         }).reset_index()
-        chart1_data['Category'] = chart1_data['Category'].astype(str)
+        chart1_data['Category'] = 'Cat ' + chart1_data['Category'].astype(str)
         x_axis = 'Category'
         x_title = 'Category'
+    
+    # Create labels for data
+    chart1_data['Sales_Label'] = chart1_data['Sales Amount'].apply(format_short_rupiah)
+    chart1_data['Kontribusi_Pct'] = chart1_data[kontribusi_col] * 100
+    chart1_data['Kontribusi_Label'] = chart1_data['Kontribusi_Pct'].apply(lambda x: f'{x:.2f}%')
     
     # Create combo chart
     fig1 = make_subplots(specs=[[{"secondary_y": True}]])
@@ -324,8 +418,14 @@ def main():
             x=chart1_data[x_axis],
             y=chart1_data['Sales Amount'],
             name='Sales Amount',
-            marker_color='#667eea',
-            opacity=0.8,
+            marker=dict(
+                color=chart1_data['Sales Amount'],
+                colorscale=[[0, '#00d4ff'], [0.5, '#7b2cbf'], [1, '#ff6b6b']],
+                line=dict(color='rgba(255,255,255,0.3)', width=1)
+            ),
+            text=chart1_data['Sales_Label'],
+            textposition='outside',
+            textfont=dict(color='#ffffff', size=11, family='Poppins'),
             hovertemplate='<b>%{x}</b><br>Sales: Rp %{y:,.0f}<extra></extra>'
         ),
         secondary_y=False
@@ -335,167 +435,238 @@ def main():
     fig1.add_trace(
         go.Scatter(
             x=chart1_data[x_axis],
-            y=chart1_data[kontribusi_col] * 100,
+            y=chart1_data['Kontribusi_Pct'],
             name='Kontribusi (%)',
-            mode='lines+markers',
-            line=dict(color='#f59e0b', width=3),
-            marker=dict(size=10, symbol='diamond'),
+            mode='lines+markers+text',
+            line=dict(color='#fee440', width=4),
+            marker=dict(size=12, symbol='diamond', color='#fee440', 
+                       line=dict(color='#ffffff', width=2)),
+            text=chart1_data['Kontribusi_Label'],
+            textposition='top center',
+            textfont=dict(color='#fee440', size=11, family='Poppins'),
             hovertemplate='<b>%{x}</b><br>Kontribusi: %{y:.2f}%<extra></extra>'
         ),
         secondary_y=True
     )
     
     fig1.update_layout(
-        title=dict(text='', font=dict(size=16)),
+        **CHART_TEMPLATE,
         xaxis_title=x_title,
-        legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
+        legend=dict(
+            orientation="h", 
+            yanchor="bottom", 
+            y=1.02, 
+            xanchor="center", 
+            x=0.5,
+            font=dict(color='#ffffff', size=12)
+        ),
         hovermode='x unified',
-        plot_bgcolor='white',
-        paper_bgcolor='white',
-        height=450,
-        margin=dict(l=60, r=60, t=40, b=60)
+        height=500,
+        margin=dict(l=80, r=80, t=60, b=80),
+        bargap=0.3
     )
     
-    fig1.update_yaxes(title_text="Sales Amount (Rp)", secondary_y=False, gridcolor='#f0f0f0')
-    fig1.update_yaxes(title_text="Kontribusi (%)", secondary_y=True, gridcolor='#f0f0f0')
-    fig1.update_xaxes(gridcolor='#f0f0f0')
+    fig1.update_yaxes(
+        title_text="Sales Amount (Rp)", 
+        secondary_y=False, 
+        gridcolor='rgba(255,255,255,0.1)',
+        tickfont=dict(color='#00d4ff'),
+        title_font=dict(color='#00d4ff')
+    )
+    fig1.update_yaxes(
+        title_text="Kontribusi (%)", 
+        secondary_y=True, 
+        gridcolor='rgba(255,255,255,0.05)',
+        tickfont=dict(color='#fee440'),
+        title_font=dict(color='#fee440')
+    )
+    fig1.update_xaxes(
+        tickfont=dict(color='#ffffff', size=11),
+        title_font=dict(color='#ffffff')
+    )
     
     st.plotly_chart(fig1, use_container_width=True)
     
-    # Chart 2: NOC vs Visit Customer
-    st.markdown("### 👥 Perbandingan NOC vs Visit Customer")
+    # ==================== CHART 2: NOC vs Visit Customer ====================
+    st.markdown('<p class="section-title">👥 Perbandingan NOC vs Visit Customer</p>', unsafe_allow_html=True)
     
     if view_option == 'Monthly':
         chart2_data = filtered_df.groupby('Month', observed=True).agg({
             'NOC': 'sum',
             'Visit Customer': 'mean'
         }).reset_index()
-        x_axis2 = 'Month'
+        chart2_data['Month_Short'] = chart2_data['Month'].astype(str).str.replace(' 2025', '')
+        x_axis2 = 'Month_Short'
     else:
         chart2_data = filtered_df.groupby('Category').agg({
             'NOC': 'sum',
             'Visit Customer': 'mean'
         }).reset_index()
-        chart2_data['Category'] = chart2_data['Category'].astype(str)
+        chart2_data['Category'] = 'Cat ' + chart2_data['Category'].astype(str)
         x_axis2 = 'Category'
+    
+    # Create labels
+    chart2_data['NOC_Label'] = chart2_data['NOC'].apply(format_number)
+    chart2_data['Visit_Label'] = chart2_data['Visit Customer'].apply(format_number)
     
     fig2 = make_subplots(specs=[[{"secondary_y": True}]])
     
+    # NOC Line
     fig2.add_trace(
         go.Scatter(
             x=chart2_data[x_axis2],
             y=chart2_data['NOC'],
             name='NOC',
-            mode='lines+markers',
-            line=dict(color='#10b981', width=3),
-            marker=dict(size=8),
+            mode='lines+markers+text',
+            line=dict(color='#00f5d4', width=4),
+            marker=dict(size=12, color='#00f5d4', line=dict(color='#ffffff', width=2)),
+            text=chart2_data['NOC_Label'],
+            textposition='top center',
+            textfont=dict(color='#00f5d4', size=10, family='Poppins'),
             hovertemplate='<b>%{x}</b><br>NOC: %{y:,.0f}<extra></extra>'
         ),
         secondary_y=False
     )
     
+    # Visit Customer Line
     fig2.add_trace(
         go.Scatter(
             x=chart2_data[x_axis2],
             y=chart2_data['Visit Customer'],
             name='Visit Customer',
-            mode='lines+markers',
-            line=dict(color='#764ba2', width=3),
-            marker=dict(size=8),
+            mode='lines+markers+text',
+            line=dict(color='#f15bb5', width=4),
+            marker=dict(size=12, color='#f15bb5', line=dict(color='#ffffff', width=2)),
+            text=chart2_data['Visit_Label'],
+            textposition='bottom center',
+            textfont=dict(color='#f15bb5', size=10, family='Poppins'),
             hovertemplate='<b>%{x}</b><br>Visit: %{y:,.0f}<extra></extra>'
         ),
         secondary_y=True
     )
     
     fig2.update_layout(
-        title=dict(text='', font=dict(size=16)),
+        **CHART_TEMPLATE,
         xaxis_title=x_title,
-        legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
+        legend=dict(
+            orientation="h", 
+            yanchor="bottom", 
+            y=1.02, 
+            xanchor="center", 
+            x=0.5
+        ),
         hovermode='x unified',
-        plot_bgcolor='white',
-        paper_bgcolor='white',
-        height=400,
-        margin=dict(l=60, r=60, t=40, b=60)
+        height=450,
+        margin=dict(l=80, r=80, t=60, b=80)
     )
     
-    fig2.update_yaxes(title_text="NOC", secondary_y=False, gridcolor='#f0f0f0')
-    fig2.update_yaxes(title_text="Visit Customer", secondary_y=True, gridcolor='#f0f0f0')
-    fig2.update_xaxes(gridcolor='#f0f0f0')
+    fig2.update_yaxes(
+        title_text="NOC", 
+        secondary_y=False, 
+        gridcolor='rgba(255,255,255,0.1)',
+        tickfont=dict(color='#00f5d4'),
+        title_font=dict(color='#00f5d4')
+    )
+    fig2.update_yaxes(
+        title_text="Visit Customer", 
+        secondary_y=True, 
+        gridcolor='rgba(255,255,255,0.05)',
+        tickfont=dict(color='#f15bb5'),
+        title_font=dict(color='#f15bb5')
+    )
+    fig2.update_xaxes(tickfont=dict(color='#ffffff', size=11))
     
     st.plotly_chart(fig2, use_container_width=True)
     
-    # Additional Charts Row
+    # ==================== ROW: Pie + Bar Charts ====================
     col_left, col_right = st.columns(2)
     
-    # Chart 3: Pie Chart - Distribusi Sales Amount per Category
+    # Chart 3: Donut Chart - Distribusi Sales Amount per Category
     with col_left:
-        st.markdown("### 🥧 Distribusi Sales Amount per Category")
+        st.markdown('<p class="section-title">🥧 Distribusi Sales Amount per Category</p>', unsafe_allow_html=True)
         
         pie_data = filtered_df.groupby('Category')['Sales Amount'].sum().reset_index()
-        pie_data['Category'] = pie_data['Category'].astype(str)
+        pie_data['Category'] = 'Category ' + pie_data['Category'].astype(str)
+        pie_data['Percentage'] = (pie_data['Sales Amount'] / pie_data['Sales Amount'].sum() * 100).round(2)
+        pie_data['Label'] = pie_data.apply(lambda x: f"{x['Category']}<br>{format_short_rupiah(x['Sales Amount'])}<br>({x['Percentage']:.1f}%)", axis=1)
         
-        fig3 = px.pie(
-            pie_data,
-            values='Sales Amount',
-            names='Category',
-            color='Category',
-            color_discrete_map={str(k): v for k, v in CATEGORY_COLORS.items()},
-            hole=0.4
-        )
-        
-        fig3.update_traces(
-            textposition='outside',
-            textinfo='percent+label',
-            hovertemplate='<b>Category %{label}</b><br>Sales: Rp %{value:,.0f}<br>Persentase: %{percent}<extra></extra>'
-        )
+        fig3 = go.Figure(data=[go.Pie(
+            labels=pie_data['Category'],
+            values=pie_data['Sales Amount'],
+            hole=0.5,
+            marker=dict(
+                colors=CATEGORY_COLORS_LIST[:len(pie_data)],
+                line=dict(color='#1a1a2e', width=3)
+            ),
+            textinfo='label+percent',
+            textfont=dict(color='#ffffff', size=12, family='Poppins'),
+            hovertemplate='<b>%{label}</b><br>Sales: Rp %{value:,.0f}<br>Persentase: %{percent}<extra></extra>',
+            pull=[0.02] * len(pie_data)
+        )])
         
         fig3.update_layout(
+            **CHART_TEMPLATE,
             showlegend=True,
-            legend=dict(orientation="h", yanchor="bottom", y=-0.2, xanchor="center", x=0.5),
-            height=400,
-            margin=dict(l=20, r=20, t=20, b=60)
+            legend=dict(
+                orientation="h", 
+                yanchor="bottom", 
+                y=-0.15, 
+                xanchor="center", 
+                x=0.5,
+                font=dict(color='#ffffff', size=11)
+            ),
+            height=450,
+            margin=dict(l=20, r=20, t=20, b=80),
+            annotations=[dict(
+                text=f'<b>Total</b><br>{format_short_rupiah(pie_data["Sales Amount"].sum())}',
+                x=0.5, y=0.5,
+                font=dict(size=14, color='#ffffff', family='Poppins'),
+                showarrow=False
+            )]
         )
         
         st.plotly_chart(fig3, use_container_width=True)
     
-    # Chart 4: Bar Chart - Qty Promo per Category
+    # Chart 4: Horizontal Bar Chart - Qty Promo per Category
     with col_right:
-        st.markdown("### 📦 Jumlah Promo per Category")
+        st.markdown('<p class="section-title">📦 Jumlah Promo per Category</p>', unsafe_allow_html=True)
         
         promo_data = filtered_df.groupby('Category')['Qty Promo'].sum().reset_index()
-        promo_data['Category'] = promo_data['Category'].astype(str)
         promo_data = promo_data.sort_values('Qty Promo', ascending=True)
+        promo_data['Category'] = 'Category ' + promo_data['Category'].astype(str)
+        promo_data['Color'] = CATEGORY_COLORS_LIST[:len(promo_data)]
         
-        fig4 = px.bar(
-            promo_data,
-            x='Qty Promo',
-            y='Category',
+        fig4 = go.Figure(data=[go.Bar(
+            x=promo_data['Qty Promo'],
+            y=promo_data['Category'],
             orientation='h',
-            color='Category',
-            color_discrete_map={str(k): v for k, v in CATEGORY_COLORS.items()}
-        )
-        
-        fig4.update_traces(
-            hovertemplate='<b>Category %{y}</b><br>Qty Promo: %{x}<extra></extra>'
-        )
+            marker=dict(
+                color=promo_data['Qty Promo'],
+                colorscale=[[0, '#00d4ff'], [0.5, '#9b5de5'], [1, '#f15bb5']],
+                line=dict(color='rgba(255,255,255,0.3)', width=1)
+            ),
+            text=promo_data['Qty Promo'],
+            textposition='outside',
+            textfont=dict(color='#ffffff', size=12, family='Poppins'),
+            hovertemplate='<b>%{y}</b><br>Qty Promo: %{x}<extra></extra>'
+        )])
         
         fig4.update_layout(
-            showlegend=False,
+            **CHART_TEMPLATE,
             xaxis_title='Jumlah Promo',
-            yaxis_title='Category',
-            plot_bgcolor='white',
-            paper_bgcolor='white',
-            height=400,
-            margin=dict(l=60, r=20, t=20, b=60)
+            yaxis_title='',
+            height=450,
+            margin=dict(l=100, r=60, t=20, b=60)
         )
         
-        fig4.update_xaxes(gridcolor='#f0f0f0')
+        fig4.update_xaxes(gridcolor='rgba(255,255,255,0.1)', tickfont=dict(color='#ffffff'))
+        fig4.update_yaxes(tickfont=dict(color='#ffffff', size=12))
         
         st.plotly_chart(fig4, use_container_width=True)
     
-    # Chart 5: Heatmap - Sales Amount per Category per Month (only for monthly view)
+    # ==================== CHART 5: Heatmap (Monthly only) ====================
     if view_option == 'Monthly':
-        st.markdown("### 🗓️ Heatmap: Sales Amount per Category per Bulan")
+        st.markdown('<p class="section-title">🗓️ Heatmap: Sales Amount per Category per Bulan</p>', unsafe_allow_html=True)
         
         heatmap_data = filtered_df.pivot_table(
             values='Sales Amount',
@@ -513,32 +684,124 @@ def main():
         
         heatmap_data = heatmap_data[month_order]
         
-        # Shorten month names for display
+        # Shorten month names
         short_months = [m.replace(' 2025', '').replace('January', 'Jan').replace('February', 'Feb')
-                       .replace('March', 'Mar').replace('April', 'Apr').replace('May', 'May')
+                       .replace('March', 'Mar').replace('April', 'Apr')
                        .replace('June', 'Jun').replace('July', 'Jul').replace('August', 'Aug')
                        .replace('September', 'Sep').replace('October', 'Oct').replace('November', 'Nov')
                        .replace('December', 'Dec') for m in month_order]
         
+        # Create text annotations
+        text_annotations = [[format_short_rupiah(val) if not pd.isna(val) else '' for val in row] for row in heatmap_data.values]
+        
         fig5 = go.Figure(data=go.Heatmap(
             z=heatmap_data.values,
             x=short_months,
-            y=[str(c) for c in heatmap_data.index],
-            colorscale='Viridis',
-            hovertemplate='Category: %{y}<br>Bulan: %{x}<br>Sales: Rp %{z:,.0f}<extra></extra>'
+            y=['Cat ' + str(c) for c in heatmap_data.index],
+            colorscale=[[0, '#1a1a2e'], [0.25, '#00d4ff'], [0.5, '#9b5de5'], [0.75, '#f15bb5'], [1, '#ff6b6b']],
+            text=text_annotations,
+            texttemplate='%{text}',
+            textfont=dict(color='#ffffff', size=10),
+            hovertemplate='Category: %{y}<br>Bulan: %{x}<br>Sales: Rp %{z:,.0f}<extra></extra>',
+            colorbar=dict(
+                title=dict(text='Sales Amount', font=dict(color='#ffffff')),
+                tickfont=dict(color='#ffffff')
+            )
         ))
         
         fig5.update_layout(
+            **CHART_TEMPLATE,
             xaxis_title='Bulan',
             yaxis_title='Category',
-            height=350,
-            margin=dict(l=60, r=20, t=20, b=60)
+            height=400,
+            margin=dict(l=80, r=20, t=20, b=80)
         )
+        
+        fig5.update_xaxes(tickfont=dict(color='#ffffff', size=11), side='bottom')
+        fig5.update_yaxes(tickfont=dict(color='#ffffff', size=12))
         
         st.plotly_chart(fig5, use_container_width=True)
     
-    # Data Table
-    st.markdown("### 📋 Data Table")
+    # ==================== CHART 6: Top Performers ====================
+    st.markdown('<p class="section-title">🏆 Top Category Performance</p>', unsafe_allow_html=True)
+    
+    col_a, col_b, col_c = st.columns(3)
+    
+    # Top by Sales
+    with col_a:
+        top_sales = filtered_df.groupby('Category')['Sales Amount'].sum().sort_values(ascending=False).head(3).reset_index()
+        top_sales['Category'] = 'Cat ' + top_sales['Category'].astype(str)
+        
+        fig6a = go.Figure(data=[go.Bar(
+            x=top_sales['Category'],
+            y=top_sales['Sales Amount'],
+            marker=dict(color=['#ffd700', '#c0c0c0', '#cd7f32']),
+            text=[format_short_rupiah(v) for v in top_sales['Sales Amount']],
+            textposition='outside',
+            textfont=dict(color='#ffffff', size=11)
+        )])
+        
+        fig6a.update_layout(
+            **CHART_TEMPLATE,
+            title=dict(text='🥇 Top 3 Sales Amount', font=dict(size=14, color='#ffffff')),
+            height=350,
+            margin=dict(l=40, r=40, t=60, b=40),
+            yaxis_title='Sales Amount'
+        )
+        
+        st.plotly_chart(fig6a, use_container_width=True)
+    
+    # Top by NOC
+    with col_b:
+        top_noc = filtered_df.groupby('Category')['NOC'].sum().sort_values(ascending=False).head(3).reset_index()
+        top_noc['Category'] = 'Cat ' + top_noc['Category'].astype(str)
+        
+        fig6b = go.Figure(data=[go.Bar(
+            x=top_noc['Category'],
+            y=top_noc['NOC'],
+            marker=dict(color=['#ffd700', '#c0c0c0', '#cd7f32']),
+            text=[format_number(v) for v in top_noc['NOC']],
+            textposition='outside',
+            textfont=dict(color='#ffffff', size=11)
+        )])
+        
+        fig6b.update_layout(
+            **CHART_TEMPLATE,
+            title=dict(text='🥇 Top 3 NOC', font=dict(size=14, color='#ffffff')),
+            height=350,
+            margin=dict(l=40, r=40, t=60, b=40),
+            yaxis_title='NOC'
+        )
+        
+        st.plotly_chart(fig6b, use_container_width=True)
+    
+    # Top by Kontribusi
+    with col_c:
+        top_kontribusi = filtered_df.groupby('Category')[kontribusi_col].mean().sort_values(ascending=False).head(3).reset_index()
+        top_kontribusi['Category'] = 'Cat ' + top_kontribusi['Category'].astype(str)
+        top_kontribusi['Kontribusi_Pct'] = top_kontribusi[kontribusi_col] * 100
+        
+        fig6c = go.Figure(data=[go.Bar(
+            x=top_kontribusi['Category'],
+            y=top_kontribusi['Kontribusi_Pct'],
+            marker=dict(color=['#ffd700', '#c0c0c0', '#cd7f32']),
+            text=[f'{v:.2f}%' for v in top_kontribusi['Kontribusi_Pct']],
+            textposition='outside',
+            textfont=dict(color='#ffffff', size=11)
+        )])
+        
+        fig6c.update_layout(
+            **CHART_TEMPLATE,
+            title=dict(text='🥇 Top 3 Kontribusi', font=dict(size=14, color='#ffffff')),
+            height=350,
+            margin=dict(l=40, r=40, t=60, b=40),
+            yaxis_title='Kontribusi (%)'
+        )
+        
+        st.plotly_chart(fig6c, use_container_width=True)
+    
+    # ==================== Data Table ====================
+    st.markdown('<p class="section-title">📋 Data Table</p>', unsafe_allow_html=True)
     
     with st.expander("🔍 Lihat Detail Data", expanded=False):
         display_df = filtered_df.copy()
@@ -546,9 +809,7 @@ def main():
         # Format columns for display
         display_df['Sales Amount (Formatted)'] = display_df['Sales Amount'].apply(format_rupiah)
         display_df['NOC (Formatted)'] = display_df['NOC'].apply(format_number)
-        
-        if kontribusi_col in display_df.columns:
-            display_df['Kontribusi (%)'] = (display_df[kontribusi_col] * 100).round(2).astype(str) + '%'
+        display_df['Kontribusi (%)'] = (display_df[kontribusi_col] * 100).round(2).astype(str) + '%'
         
         st.dataframe(
             display_df,
@@ -570,7 +831,7 @@ def main():
     st.markdown(
         """
         <div style='text-align: center; color: #6b7280; padding: 1rem;'>
-            <p>📊 Promo Performance Dashboard | Built with Streamlit & Plotly</p>
+            <p style='color: #a0aec0;'>📊 Promo Performance Dashboard | Built with ❤️ using Streamlit & Plotly</p>
         </div>
         """,
         unsafe_allow_html=True
