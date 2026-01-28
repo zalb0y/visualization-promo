@@ -182,25 +182,6 @@ def format_short_rupiah(value):
 # Color palette
 CATEGORY_COLORS_LIST = ['#00d4ff', '#9b5de5', '#f15bb5', '#00f5d4', '#fee440', '#ff6b6b', '#00bbf9']
 
-# Helper function untuk apply chart theme
-def apply_chart_theme(fig):
-    fig.update_layout(
-        paper_bgcolor='rgba(0,0,0,0)',
-        plot_bgcolor='rgba(0,0,0,0)',
-        font=dict(color='#ffffff', family='Poppins'),
-    )
-    fig.update_xaxes(
-        gridcolor='rgba(255,255,255,0.1)',
-        linecolor='rgba(255,255,255,0.2)',
-        tickfont=dict(color='#ffffff', size=11)
-    )
-    fig.update_yaxes(
-        gridcolor='rgba(255,255,255,0.1)',
-        linecolor='rgba(255,255,255,0.2)',
-        tickfont=dict(color='#ffffff', size=11)
-    )
-    return fig
-
 # Main App
 def main():
     # Header
@@ -211,7 +192,7 @@ def main():
     try:
         data = load_data('all_summary.xlsx')
     except FileNotFoundError:
-        st.error("⚠️ File 'all_summary.xlsx' tidak ditemukan. Pastikan file berada di direktori yang sama dengan app.py")
+        st.error(⚠️ File 'all_summary.xlsx' tidak ditemukan. Pastikan file berada di direktori yang sama dengan app.py")
         st.stop()
     
     # Sidebar Filters
@@ -438,8 +419,8 @@ def main():
     
     st.plotly_chart(fig1, use_container_width=True)
     
-    # ==================== CHART 2: NOC vs Visit Customer ====================
-    st.markdown('<p class="section-title">👥 Perbandingan NOC vs Visit Customer</p>', unsafe_allow_html=True)
+    # ==================== CHART 2: NOC dan Visit Customer (DUAL CHART - TERPISAH) ====================
+    st.markdown('<p class="section-title">👥 NOC dan Visit Customer</p>', unsafe_allow_html=True)
     
     if view_option == 'Monthly':
         chart2_data = filtered_df.groupby('Month', observed=True).agg({
@@ -456,80 +437,202 @@ def main():
     
     chart2_data['NOC_Label'] = chart2_data['NOC'].apply(format_number)
     chart2_data['Visit_Label'] = chart2_data['Visit Customer'].apply(format_number)
+    chart2_data['Conversion_Rate'] = (chart2_data['NOC'] / chart2_data['Visit Customer'] * 100)
+    chart2_data['Conversion_Label'] = chart2_data['Conversion_Rate'].apply(lambda x: f'{x:.2f}%')
     
-    fig2 = make_subplots(specs=[[{"secondary_y": True}]])
+    # Dual Chart Side by Side
+    col_noc, col_visit = st.columns(2)
     
-    fig2.add_trace(
+    # Chart NOC
+    with col_noc:
+        fig_noc = go.Figure()
+        
+        fig_noc.add_trace(
+            go.Bar(
+                x=chart2_data['X_Label'],
+                y=chart2_data['NOC'],
+                name='NOC',
+                marker=dict(
+                    color=chart2_data['NOC'],
+                    colorscale=[[0, '#00f5d4'], [0.5, '#00d4ff'], [1, '#0077b6']],
+                    line=dict(color='rgba(255,255,255,0.3)', width=1)
+                ),
+                text=chart2_data['NOC_Label'],
+                textposition='outside',
+                textfont=dict(color='#00f5d4', size=11),
+                hovertemplate='<b>%{x}</b><br>NOC: %{y:,.0f}<extra></extra>'
+            )
+        )
+        
+        fig_noc.update_layout(
+            paper_bgcolor='rgba(0,0,0,0)',
+            plot_bgcolor='rgba(0,0,0,0)',
+            font=dict(color='#ffffff', family='Poppins'),
+            title=dict(
+                text='📈 Number of Customer (NOC)',
+                font=dict(size=16, color='#00f5d4'),
+                x=0.5
+            ),
+            xaxis_title=x_title,
+            yaxis_title='NOC',
+            height=400,
+            margin=dict(l=60, r=40, t=80, b=60),
+            bargap=0.3
+        )
+        
+        fig_noc.update_xaxes(
+            gridcolor='rgba(255,255,255,0.1)',
+            tickfont=dict(color='#ffffff', size=10)
+        )
+        fig_noc.update_yaxes(
+            gridcolor='rgba(255,255,255,0.1)',
+            tickfont=dict(color='#00f5d4', size=10),
+            title_font=dict(color='#00f5d4', size=12)
+        )
+        
+        st.plotly_chart(fig_noc, use_container_width=True)
+    
+    # Chart Visit Customer
+    with col_visit:
+        fig_visit = go.Figure()
+        
+        fig_visit.add_trace(
+            go.Bar(
+                x=chart2_data['X_Label'],
+                y=chart2_data['Visit Customer'],
+                name='Visit Customer',
+                marker=dict(
+                    color=chart2_data['Visit Customer'],
+                    colorscale=[[0, '#f15bb5'], [0.5, '#9b5de5'], [1, '#7b2cbf']],
+                    line=dict(color='rgba(255,255,255,0.3)', width=1)
+                ),
+                text=chart2_data['Visit_Label'],
+                textposition='outside',
+                textfont=dict(color='#f15bb5', size=11),
+                hovertemplate='<b>%{x}</b><br>Visit: %{y:,.0f}<extra></extra>'
+            )
+        )
+        
+        fig_visit.update_layout(
+            paper_bgcolor='rgba(0,0,0,0)',
+            plot_bgcolor='rgba(0,0,0,0)',
+            font=dict(color='#ffffff', family='Poppins'),
+            title=dict(
+                text='🏪 Visit Customer',
+                font=dict(size=16, color='#f15bb5'),
+                x=0.5
+            ),
+            xaxis_title=x_title,
+            yaxis_title='Visit Customer',
+            height=400,
+            margin=dict(l=60, r=40, t=80, b=60),
+            bargap=0.3
+        )
+        
+        fig_visit.update_xaxes(
+            gridcolor='rgba(255,255,255,0.1)',
+            tickfont=dict(color='#ffffff', size=10)
+        )
+        fig_visit.update_yaxes(
+            gridcolor='rgba(255,255,255,0.1)',
+            tickfont=dict(color='#f15bb5', size=10),
+            title_font=dict(color='#f15bb5', size=12)
+        )
+        
+        st.plotly_chart(fig_visit, use_container_width=True)
+    
+    # ==================== CHART 3: CONVERSION RATE (NOC / Visit Customer) ====================
+    st.markdown('<p class="section-title">🎯 Conversion Rate (NOC / Visit Customer)</p>', unsafe_allow_html=True)
+    
+    fig_conversion = go.Figure()
+    
+    # Area chart untuk conversion rate
+    fig_conversion.add_trace(
         go.Scatter(
             x=chart2_data['X_Label'],
-            y=chart2_data['NOC'],
-            name='NOC',
+            y=chart2_data['Conversion_Rate'],
+            name='Conversion Rate',
             mode='lines+markers+text',
-            line=dict(color='#00f5d4', width=4),
-            marker=dict(size=12, color='#00f5d4', line=dict(color='#ffffff', width=2)),
-            text=chart2_data['NOC_Label'],
+            fill='tozeroy',
+            fillcolor='rgba(254, 228, 64, 0.2)',
+            line=dict(color='#fee440', width=4),
+            marker=dict(size=14, color='#fee440', line=dict(color='#ffffff', width=2)),
+            text=chart2_data['Conversion_Label'],
             textposition='top center',
-            textfont=dict(color='#00f5d4', size=11),
-            hovertemplate='<b>%{x}</b><br>NOC: %{y:,.0f}<extra></extra>'
-        ),
-        secondary_y=False
+            textfont=dict(color='#fee440', size=12, family='Poppins'),
+            hovertemplate='<b>%{x}</b><br>Conversion Rate: %{y:.2f}%<extra></extra>'
+        )
     )
     
-    fig2.add_trace(
-        go.Scatter(
-            x=chart2_data['X_Label'],
-            y=chart2_data['Visit Customer'],
-            name='Visit Customer',
-            mode='lines+markers+text',
-            line=dict(color='#f15bb5', width=4),
-            marker=dict(size=12, color='#f15bb5', line=dict(color='#ffffff', width=2)),
-            text=chart2_data['Visit_Label'],
-            textposition='bottom center',
-            textfont=dict(color='#f15bb5', size=11),
-            hovertemplate='<b>%{x}</b><br>Visit: %{y:,.0f}<extra></extra>'
-        ),
-        secondary_y=True
+    # Add average line
+    avg_conversion = chart2_data['Conversion_Rate'].mean()
+    fig_conversion.add_hline(
+        y=avg_conversion, 
+        line_dash="dash", 
+        line_color="#ff6b6b",
+        annotation_text=f"Avg: {avg_conversion:.2f}%",
+        annotation_position="right",
+        annotation_font=dict(color='#ff6b6b', size=12)
     )
     
-    fig2.update_layout(
+    fig_conversion.update_layout(
         paper_bgcolor='rgba(0,0,0,0)',
         plot_bgcolor='rgba(0,0,0,0)',
         font=dict(color='#ffffff', family='Poppins'),
         xaxis_title=x_title,
-        legend=dict(
-            orientation="h", 
-            yanchor="bottom", 
-            y=1.02, 
-            xanchor="center", 
-            x=0.5,
-            font=dict(color='#ffffff', size=12),
-            bgcolor='rgba(0,0,0,0.3)'
-        ),
-        hovermode='x unified',
-        height=450,
-        margin=dict(l=80, r=80, t=80, b=80)
+        yaxis_title='Conversion Rate (%)',
+        height=400,
+        margin=dict(l=80, r=80, t=40, b=80),
+        showlegend=False
     )
     
-    fig2.update_xaxes(
+    fig_conversion.update_xaxes(
         gridcolor='rgba(255,255,255,0.1)',
-        tickfont=dict(color='#ffffff', size=12)
+        tickfont=dict(color='#ffffff', size=12),
+        title_font=dict(color='#ffffff', size=14)
     )
-    fig2.update_yaxes(
-        title_text="NOC", 
-        secondary_y=False, 
+    fig_conversion.update_yaxes(
         gridcolor='rgba(255,255,255,0.1)',
-        tickfont=dict(color='#00f5d4', size=11),
-        title_font=dict(color='#00f5d4', size=13)
-    )
-    fig2.update_yaxes(
-        title_text="Visit Customer", 
-        secondary_y=True, 
-        gridcolor='rgba(255,255,255,0.05)',
-        tickfont=dict(color='#f15bb5', size=11),
-        title_font=dict(color='#f15bb5', size=13)
+        tickfont=dict(color='#fee440', size=11),
+        title_font=dict(color='#fee440', size=13)
     )
     
-    st.plotly_chart(fig2, use_container_width=True)
+    st.plotly_chart(fig_conversion, use_container_width=True)
+    
+    # Info box untuk Conversion Rate
+    avg_conv = chart2_data['Conversion_Rate'].mean()
+    max_conv = chart2_data['Conversion_Rate'].max()
+    min_conv = chart2_data['Conversion_Rate'].min()
+    max_period = chart2_data.loc[chart2_data['Conversion_Rate'].idxmax(), 'X_Label']
+    min_period = chart2_data.loc[chart2_data['Conversion_Rate'].idxmin(), 'X_Label']
+    
+    col_info1, col_info2, col_info3 = st.columns(3)
+    
+    with col_info1:
+        st.markdown(f"""
+        <div class="metric-container" style="border-left: 4px solid #fee440;">
+            <div class="metric-value" style="font-size: 1.5rem;">{avg_conv:.2f}%</div>
+            <div class="metric-label">📊 Rata-rata Conversion</div>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    with col_info2:
+        st.markdown(f"""
+        <div class="metric-container" style="border-left: 4px solid #00f5d4;">
+            <div class="metric-value" style="font-size: 1.5rem;">{max_conv:.2f}%</div>
+            <div class="metric-label">🔝 Tertinggi ({max_period})</div>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    with col_info3:
+        st.markdown(f"""
+        <div class="metric-container" style="border-left: 4px solid #ff6b6b;">
+            <div class="metric-value" style="font-size: 1.5rem;">{min_conv:.2f}%</div>
+            <div class="metric-label">🔻 Terendah ({min_period})</div>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    st.markdown("<br>", unsafe_allow_html=True)
     
     # ==================== ROW: Pie + Bar Charts ====================
     col_left, col_right = st.columns(2)
@@ -785,7 +888,7 @@ def main():
     st.markdown(
         """
         <div style='text-align: center; color: #6b7280; padding: 1rem;'>
-            <p style='color: #a0aec0;'>📊 Promo Performance Dashboard | Made by zalb0y using Streamlit & Plotly</p>
+            <p style='color: #a0aec0;'>📊 Promo Performance Dashboard | Built with ❤️ using Streamlit & Plotly</p>
         </div>
         """,
         unsafe_allow_html=True
