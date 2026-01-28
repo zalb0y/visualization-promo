@@ -78,15 +78,6 @@ st.markdown("""
         margin-top: 0.5rem;
     }
     
-    .chart-container {
-        background: linear-gradient(145deg, #1e2a4a 0%, #252f4a 100%);
-        border-radius: 20px;
-        padding: 1.5rem;
-        border: 1px solid rgba(255,255,255,0.08);
-        box-shadow: 0 8px 32px rgba(0,0,0,0.2);
-        margin-bottom: 1.5rem;
-    }
-    
     .section-title {
         font-size: 1.4rem;
         font-weight: 600;
@@ -143,19 +134,16 @@ def load_data(file_path):
         'non_cig_month': pd.read_excel(xlsx, sheet_name='Summary Non Cigarette (Month)')
     }
     
-    # Standardize column names
     for key in ['all_year', 'non_cig_year']:
         if 'Jumlah Promo' in data[key].columns:
             data[key] = data[key].rename(columns={'Jumlah Promo': 'Qty Promo'})
     
-    # Define month order
     month_order = [
         'January 2025', 'February 2025', 'March 2025', 'April 2025',
         'May 2025', 'June 2025', 'July 2025', 'August 2025',
         'September 2025', 'October 2025', 'November 2025', 'December 2025'
     ]
     
-    # Sort monthly data
     for key in ['all_month', 'non_cig_month']:
         data[key]['Month'] = pd.Categorical(data[key]['Month'], categories=month_order, ordered=True)
         data[key] = data[key].sort_values(['Category', 'Month'])
@@ -191,56 +179,27 @@ def format_short_rupiah(value):
     else:
         return f"{value:,.0f}"
 
-# Color palette - Vibrant colors for dark theme
-COLORS = {
-    'primary': '#00d4ff',
-    'secondary': '#7b2cbf',
-    'accent': '#ff6b6b',
-    'success': '#00f5d4',
-    'warning': '#fee440',
-    'danger': '#ff6b6b',
-    'info': '#00bbf9',
-    'purple': '#9b5de5',
-    'pink': '#f15bb5',
-    'orange': '#fb8500'
-}
-
-CATEGORY_COLORS = {
-    11: '#00d4ff',
-    14: '#9b5de5', 
-    17: '#f15bb5',
-    19: '#00f5d4',
-    21: '#fee440',
-    26: '#ff6b6b',
-    27: '#00bbf9'
-}
-
+# Color palette
 CATEGORY_COLORS_LIST = ['#00d4ff', '#9b5de5', '#f15bb5', '#00f5d4', '#fee440', '#ff6b6b', '#00bbf9']
 
-# Chart theme
-CHART_TEMPLATE = {
-    'paper_bgcolor': 'rgba(0,0,0,0)',
-    'plot_bgcolor': 'rgba(0,0,0,0)',
-    'font': {'color': '#ffffff', 'family': 'Poppins'},
-    'title': {'font': {'size': 18, 'color': '#ffffff'}},
-    'xaxis': {
-        'gridcolor': 'rgba(255,255,255,0.1)',
-        'linecolor': 'rgba(255,255,255,0.2)',
-        'tickfont': {'color': '#a0aec0', 'size': 11},
-        'title': {'font': {'color': '#ffffff', 'size': 13}}
-    },
-    'yaxis': {
-        'gridcolor': 'rgba(255,255,255,0.1)',
-        'linecolor': 'rgba(255,255,255,0.2)',
-        'tickfont': {'color': '#a0aec0', 'size': 11},
-        'title': {'font': {'color': '#ffffff', 'size': 13}}
-    },
-    'legend': {
-        'font': {'color': '#ffffff', 'size': 12},
-        'bgcolor': 'rgba(0,0,0,0.3)',
-        'bordercolor': 'rgba(255,255,255,0.2)'
-    }
-}
+# Helper function untuk apply chart theme
+def apply_chart_theme(fig):
+    fig.update_layout(
+        paper_bgcolor='rgba(0,0,0,0)',
+        plot_bgcolor='rgba(0,0,0,0)',
+        font=dict(color='#ffffff', family='Poppins'),
+    )
+    fig.update_xaxes(
+        gridcolor='rgba(255,255,255,0.1)',
+        linecolor='rgba(255,255,255,0.2)',
+        tickfont=dict(color='#ffffff', size=11)
+    )
+    fig.update_yaxes(
+        gridcolor='rgba(255,255,255,0.1)',
+        linecolor='rgba(255,255,255,0.2)',
+        tickfont=dict(color='#ffffff', size=11)
+    )
+    return fig
 
 # Main App
 def main():
@@ -260,7 +219,6 @@ def main():
         st.markdown("## 🎛️ Filter Data")
         st.markdown("---")
         
-        # Dataset selection
         dataset_option = st.radio(
             "📁 Pilih Dataset",
             options=['Summary All', 'Summary Non Cigarette'],
@@ -270,7 +228,6 @@ def main():
         
         st.markdown("---")
         
-        # View selection
         view_option = st.radio(
             "📅 Pilih Tampilan",
             options=['Yearly', 'Monthly'],
@@ -280,7 +237,6 @@ def main():
         
         st.markdown("---")
         
-        # Get current dataframe based on selection
         if dataset_option == 'Summary All':
             df_year = data['all_year']
             df_month = data['all_month']
@@ -290,7 +246,6 @@ def main():
         
         current_df = df_month if view_option == 'Monthly' else df_year
         
-        # Category filter
         all_categories = sorted(current_df['Category'].unique())
         selected_categories = st.multiselect(
             "🏷️ Filter Category",
@@ -299,7 +254,6 @@ def main():
             help="Pilih kategori yang ingin ditampilkan"
         )
         
-        # Month filter (only for monthly view)
         if view_option == 'Monthly':
             st.markdown("---")
             all_months = current_df['Month'].cat.categories.tolist()
@@ -327,7 +281,6 @@ def main():
         st.warning("⚠️ Tidak ada data yang sesuai dengan filter. Silakan ubah filter Anda.")
         st.stop()
     
-    # Determine kontribusi column
     kontribusi_col = 'Kontribusi Promo pada Net Sales' if 'Kontribusi Promo pada Net Sales' in filtered_df.columns else 'Kontribusi Sales'
     
     # Calculate KPIs
@@ -337,7 +290,7 @@ def main():
     avg_kontribusi = filtered_df[kontribusi_col].mean() * 100
     total_net_sales = filtered_df['Net Sales (by Group Category)'].sum()
     
-    # KPI Cards dengan HTML custom
+    # KPI Cards
     st.markdown("### 📈 Key Performance Indicators")
     
     col1, col2, col3, col4, col5 = st.columns(5)
@@ -392,30 +345,25 @@ def main():
             'Sales Amount': 'sum',
             kontribusi_col: 'mean'
         }).reset_index()
-        chart1_data['Month_Short'] = chart1_data['Month'].astype(str).str.replace(' 2025', '')
-        x_axis = 'Month_Short'
+        chart1_data['X_Label'] = chart1_data['Month'].astype(str).str.replace(' 2025', '')
         x_title = 'Bulan'
     else:
         chart1_data = filtered_df.groupby('Category').agg({
             'Sales Amount': 'sum',
             kontribusi_col: 'mean'
         }).reset_index()
-        chart1_data['Category'] = 'Cat ' + chart1_data['Category'].astype(str)
-        x_axis = 'Category'
+        chart1_data['X_Label'] = 'Cat ' + chart1_data['Category'].astype(str)
         x_title = 'Category'
     
-    # Create labels for data
     chart1_data['Sales_Label'] = chart1_data['Sales Amount'].apply(format_short_rupiah)
     chart1_data['Kontribusi_Pct'] = chart1_data[kontribusi_col] * 100
     chart1_data['Kontribusi_Label'] = chart1_data['Kontribusi_Pct'].apply(lambda x: f'{x:.2f}%')
     
-    # Create combo chart
     fig1 = make_subplots(specs=[[{"secondary_y": True}]])
     
-    # Bar chart for Sales Amount
     fig1.add_trace(
         go.Bar(
-            x=chart1_data[x_axis],
+            x=chart1_data['X_Label'],
             y=chart1_data['Sales Amount'],
             name='Sales Amount',
             marker=dict(
@@ -425,32 +373,33 @@ def main():
             ),
             text=chart1_data['Sales_Label'],
             textposition='outside',
-            textfont=dict(color='#ffffff', size=11, family='Poppins'),
+            textfont=dict(color='#ffffff', size=12),
             hovertemplate='<b>%{x}</b><br>Sales: Rp %{y:,.0f}<extra></extra>'
         ),
         secondary_y=False
     )
     
-    # Line chart for Kontribusi
     fig1.add_trace(
         go.Scatter(
-            x=chart1_data[x_axis],
+            x=chart1_data['X_Label'],
             y=chart1_data['Kontribusi_Pct'],
             name='Kontribusi (%)',
             mode='lines+markers+text',
             line=dict(color='#fee440', width=4),
-            marker=dict(size=12, symbol='diamond', color='#fee440', 
+            marker=dict(size=14, symbol='diamond', color='#fee440', 
                        line=dict(color='#ffffff', width=2)),
             text=chart1_data['Kontribusi_Label'],
             textposition='top center',
-            textfont=dict(color='#fee440', size=11, family='Poppins'),
+            textfont=dict(color='#fee440', size=12),
             hovertemplate='<b>%{x}</b><br>Kontribusi: %{y:.2f}%<extra></extra>'
         ),
         secondary_y=True
     )
     
     fig1.update_layout(
-        **CHART_TEMPLATE,
+        paper_bgcolor='rgba(0,0,0,0)',
+        plot_bgcolor='rgba(0,0,0,0)',
+        font=dict(color='#ffffff', family='Poppins'),
         xaxis_title=x_title,
         legend=dict(
             orientation="h", 
@@ -458,31 +407,33 @@ def main():
             y=1.02, 
             xanchor="center", 
             x=0.5,
-            font=dict(color='#ffffff', size=12)
+            font=dict(color='#ffffff', size=12),
+            bgcolor='rgba(0,0,0,0.3)'
         ),
         hovermode='x unified',
         height=500,
-        margin=dict(l=80, r=80, t=60, b=80),
+        margin=dict(l=80, r=80, t=80, b=80),
         bargap=0.3
     )
     
+    fig1.update_xaxes(
+        gridcolor='rgba(255,255,255,0.1)',
+        tickfont=dict(color='#ffffff', size=12),
+        title_font=dict(color='#ffffff', size=14)
+    )
     fig1.update_yaxes(
         title_text="Sales Amount (Rp)", 
         secondary_y=False, 
         gridcolor='rgba(255,255,255,0.1)',
-        tickfont=dict(color='#00d4ff'),
-        title_font=dict(color='#00d4ff')
+        tickfont=dict(color='#00d4ff', size=11),
+        title_font=dict(color='#00d4ff', size=13)
     )
     fig1.update_yaxes(
         title_text="Kontribusi (%)", 
         secondary_y=True, 
         gridcolor='rgba(255,255,255,0.05)',
-        tickfont=dict(color='#fee440'),
-        title_font=dict(color='#fee440')
-    )
-    fig1.update_xaxes(
-        tickfont=dict(color='#ffffff', size=11),
-        title_font=dict(color='#ffffff')
+        tickfont=dict(color='#fee440', size=11),
+        title_font=dict(color='#fee440', size=13)
     )
     
     st.plotly_chart(fig1, use_container_width=True)
@@ -495,26 +446,22 @@ def main():
             'NOC': 'sum',
             'Visit Customer': 'mean'
         }).reset_index()
-        chart2_data['Month_Short'] = chart2_data['Month'].astype(str).str.replace(' 2025', '')
-        x_axis2 = 'Month_Short'
+        chart2_data['X_Label'] = chart2_data['Month'].astype(str).str.replace(' 2025', '')
     else:
         chart2_data = filtered_df.groupby('Category').agg({
             'NOC': 'sum',
             'Visit Customer': 'mean'
         }).reset_index()
-        chart2_data['Category'] = 'Cat ' + chart2_data['Category'].astype(str)
-        x_axis2 = 'Category'
+        chart2_data['X_Label'] = 'Cat ' + chart2_data['Category'].astype(str)
     
-    # Create labels
     chart2_data['NOC_Label'] = chart2_data['NOC'].apply(format_number)
     chart2_data['Visit_Label'] = chart2_data['Visit Customer'].apply(format_number)
     
     fig2 = make_subplots(specs=[[{"secondary_y": True}]])
     
-    # NOC Line
     fig2.add_trace(
         go.Scatter(
-            x=chart2_data[x_axis2],
+            x=chart2_data['X_Label'],
             y=chart2_data['NOC'],
             name='NOC',
             mode='lines+markers+text',
@@ -522,16 +469,15 @@ def main():
             marker=dict(size=12, color='#00f5d4', line=dict(color='#ffffff', width=2)),
             text=chart2_data['NOC_Label'],
             textposition='top center',
-            textfont=dict(color='#00f5d4', size=10, family='Poppins'),
+            textfont=dict(color='#00f5d4', size=11),
             hovertemplate='<b>%{x}</b><br>NOC: %{y:,.0f}<extra></extra>'
         ),
         secondary_y=False
     )
     
-    # Visit Customer Line
     fig2.add_trace(
         go.Scatter(
-            x=chart2_data[x_axis2],
+            x=chart2_data['X_Label'],
             y=chart2_data['Visit Customer'],
             name='Visit Customer',
             mode='lines+markers+text',
@@ -539,59 +485,64 @@ def main():
             marker=dict(size=12, color='#f15bb5', line=dict(color='#ffffff', width=2)),
             text=chart2_data['Visit_Label'],
             textposition='bottom center',
-            textfont=dict(color='#f15bb5', size=10, family='Poppins'),
+            textfont=dict(color='#f15bb5', size=11),
             hovertemplate='<b>%{x}</b><br>Visit: %{y:,.0f}<extra></extra>'
         ),
         secondary_y=True
     )
     
     fig2.update_layout(
-        **CHART_TEMPLATE,
+        paper_bgcolor='rgba(0,0,0,0)',
+        plot_bgcolor='rgba(0,0,0,0)',
+        font=dict(color='#ffffff', family='Poppins'),
         xaxis_title=x_title,
         legend=dict(
             orientation="h", 
             yanchor="bottom", 
             y=1.02, 
             xanchor="center", 
-            x=0.5
+            x=0.5,
+            font=dict(color='#ffffff', size=12),
+            bgcolor='rgba(0,0,0,0.3)'
         ),
         hovermode='x unified',
         height=450,
-        margin=dict(l=80, r=80, t=60, b=80)
+        margin=dict(l=80, r=80, t=80, b=80)
     )
     
+    fig2.update_xaxes(
+        gridcolor='rgba(255,255,255,0.1)',
+        tickfont=dict(color='#ffffff', size=12)
+    )
     fig2.update_yaxes(
         title_text="NOC", 
         secondary_y=False, 
         gridcolor='rgba(255,255,255,0.1)',
-        tickfont=dict(color='#00f5d4'),
-        title_font=dict(color='#00f5d4')
+        tickfont=dict(color='#00f5d4', size=11),
+        title_font=dict(color='#00f5d4', size=13)
     )
     fig2.update_yaxes(
         title_text="Visit Customer", 
         secondary_y=True, 
         gridcolor='rgba(255,255,255,0.05)',
-        tickfont=dict(color='#f15bb5'),
-        title_font=dict(color='#f15bb5')
+        tickfont=dict(color='#f15bb5', size=11),
+        title_font=dict(color='#f15bb5', size=13)
     )
-    fig2.update_xaxes(tickfont=dict(color='#ffffff', size=11))
     
     st.plotly_chart(fig2, use_container_width=True)
     
     # ==================== ROW: Pie + Bar Charts ====================
     col_left, col_right = st.columns(2)
     
-    # Chart 3: Donut Chart - Distribusi Sales Amount per Category
     with col_left:
         st.markdown('<p class="section-title">🥧 Distribusi Sales Amount per Category</p>', unsafe_allow_html=True)
         
         pie_data = filtered_df.groupby('Category')['Sales Amount'].sum().reset_index()
-        pie_data['Category'] = 'Category ' + pie_data['Category'].astype(str)
+        pie_data['Category_Label'] = 'Category ' + pie_data['Category'].astype(str)
         pie_data['Percentage'] = (pie_data['Sales Amount'] / pie_data['Sales Amount'].sum() * 100).round(2)
-        pie_data['Label'] = pie_data.apply(lambda x: f"{x['Category']}<br>{format_short_rupiah(x['Sales Amount'])}<br>({x['Percentage']:.1f}%)", axis=1)
         
         fig3 = go.Figure(data=[go.Pie(
-            labels=pie_data['Category'],
+            labels=pie_data['Category_Label'],
             values=pie_data['Sales Amount'],
             hole=0.5,
             marker=dict(
@@ -599,13 +550,15 @@ def main():
                 line=dict(color='#1a1a2e', width=3)
             ),
             textinfo='label+percent',
-            textfont=dict(color='#ffffff', size=12, family='Poppins'),
+            textfont=dict(color='#ffffff', size=11),
             hovertemplate='<b>%{label}</b><br>Sales: Rp %{value:,.0f}<br>Persentase: %{percent}<extra></extra>',
             pull=[0.02] * len(pie_data)
         )])
         
         fig3.update_layout(
-            **CHART_TEMPLATE,
+            paper_bgcolor='rgba(0,0,0,0)',
+            plot_bgcolor='rgba(0,0,0,0)',
+            font=dict(color='#ffffff', family='Poppins'),
             showlegend=True,
             legend=dict(
                 orientation="h", 
@@ -613,7 +566,7 @@ def main():
                 y=-0.15, 
                 xanchor="center", 
                 x=0.5,
-                font=dict(color='#ffffff', size=11)
+                font=dict(color='#ffffff', size=10)
             ),
             height=450,
             margin=dict(l=20, r=20, t=20, b=80),
@@ -627,18 +580,16 @@ def main():
         
         st.plotly_chart(fig3, use_container_width=True)
     
-    # Chart 4: Horizontal Bar Chart - Qty Promo per Category
     with col_right:
         st.markdown('<p class="section-title">📦 Jumlah Promo per Category</p>', unsafe_allow_html=True)
         
         promo_data = filtered_df.groupby('Category')['Qty Promo'].sum().reset_index()
         promo_data = promo_data.sort_values('Qty Promo', ascending=True)
-        promo_data['Category'] = 'Category ' + promo_data['Category'].astype(str)
-        promo_data['Color'] = CATEGORY_COLORS_LIST[:len(promo_data)]
+        promo_data['Category_Label'] = 'Category ' + promo_data['Category'].astype(str)
         
         fig4 = go.Figure(data=[go.Bar(
             x=promo_data['Qty Promo'],
-            y=promo_data['Category'],
+            y=promo_data['Category_Label'],
             orientation='h',
             marker=dict(
                 color=promo_data['Qty Promo'],
@@ -647,12 +598,14 @@ def main():
             ),
             text=promo_data['Qty Promo'],
             textposition='outside',
-            textfont=dict(color='#ffffff', size=12, family='Poppins'),
+            textfont=dict(color='#ffffff', size=12),
             hovertemplate='<b>%{y}</b><br>Qty Promo: %{x}<extra></extra>'
         )])
         
         fig4.update_layout(
-            **CHART_TEMPLATE,
+            paper_bgcolor='rgba(0,0,0,0)',
+            plot_bgcolor='rgba(0,0,0,0)',
+            font=dict(color='#ffffff', family='Poppins'),
             xaxis_title='Jumlah Promo',
             yaxis_title='',
             height=450,
@@ -675,7 +628,6 @@ def main():
             aggfunc='sum'
         )
         
-        # Reorder columns by month
         month_order = [m for m in [
             'January 2025', 'February 2025', 'March 2025', 'April 2025',
             'May 2025', 'June 2025', 'July 2025', 'August 2025',
@@ -684,14 +636,12 @@ def main():
         
         heatmap_data = heatmap_data[month_order]
         
-        # Shorten month names
         short_months = [m.replace(' 2025', '').replace('January', 'Jan').replace('February', 'Feb')
                        .replace('March', 'Mar').replace('April', 'Apr')
                        .replace('June', 'Jun').replace('July', 'Jul').replace('August', 'Aug')
                        .replace('September', 'Sep').replace('October', 'Oct').replace('November', 'Nov')
                        .replace('December', 'Dec') for m in month_order]
         
-        # Create text annotations
         text_annotations = [[format_short_rupiah(val) if not pd.isna(val) else '' for val in row] for row in heatmap_data.values]
         
         fig5 = go.Figure(data=go.Heatmap(
@@ -704,13 +654,15 @@ def main():
             textfont=dict(color='#ffffff', size=10),
             hovertemplate='Category: %{y}<br>Bulan: %{x}<br>Sales: Rp %{z:,.0f}<extra></extra>',
             colorbar=dict(
-                title=dict(text='Sales Amount', font=dict(color='#ffffff')),
+                title=dict(text='Sales', font=dict(color='#ffffff')),
                 tickfont=dict(color='#ffffff')
             )
         ))
         
         fig5.update_layout(
-            **CHART_TEMPLATE,
+            paper_bgcolor='rgba(0,0,0,0)',
+            plot_bgcolor='rgba(0,0,0,0)',
+            font=dict(color='#ffffff', family='Poppins'),
             xaxis_title='Bulan',
             yaxis_title='Category',
             height=400,
@@ -727,76 +679,85 @@ def main():
     
     col_a, col_b, col_c = st.columns(3)
     
-    # Top by Sales
     with col_a:
         top_sales = filtered_df.groupby('Category')['Sales Amount'].sum().sort_values(ascending=False).head(3).reset_index()
-        top_sales['Category'] = 'Cat ' + top_sales['Category'].astype(str)
+        top_sales['Category_Label'] = 'Cat ' + top_sales['Category'].astype(str)
         
         fig6a = go.Figure(data=[go.Bar(
-            x=top_sales['Category'],
+            x=top_sales['Category_Label'],
             y=top_sales['Sales Amount'],
             marker=dict(color=['#ffd700', '#c0c0c0', '#cd7f32']),
             text=[format_short_rupiah(v) for v in top_sales['Sales Amount']],
             textposition='outside',
-            textfont=dict(color='#ffffff', size=11)
+            textfont=dict(color='#ffffff', size=12)
         )])
         
         fig6a.update_layout(
-            **CHART_TEMPLATE,
+            paper_bgcolor='rgba(0,0,0,0)',
+            plot_bgcolor='rgba(0,0,0,0)',
+            font=dict(color='#ffffff', family='Poppins'),
             title=dict(text='🥇 Top 3 Sales Amount', font=dict(size=14, color='#ffffff')),
             height=350,
             margin=dict(l=40, r=40, t=60, b=40),
             yaxis_title='Sales Amount'
         )
+        fig6a.update_xaxes(tickfont=dict(color='#ffffff'))
+        fig6a.update_yaxes(gridcolor='rgba(255,255,255,0.1)', tickfont=dict(color='#ffffff'))
         
         st.plotly_chart(fig6a, use_container_width=True)
     
-    # Top by NOC
     with col_b:
         top_noc = filtered_df.groupby('Category')['NOC'].sum().sort_values(ascending=False).head(3).reset_index()
-        top_noc['Category'] = 'Cat ' + top_noc['Category'].astype(str)
+        top_noc['Category_Label'] = 'Cat ' + top_noc['Category'].astype(str)
         
         fig6b = go.Figure(data=[go.Bar(
-            x=top_noc['Category'],
+            x=top_noc['Category_Label'],
             y=top_noc['NOC'],
             marker=dict(color=['#ffd700', '#c0c0c0', '#cd7f32']),
             text=[format_number(v) for v in top_noc['NOC']],
             textposition='outside',
-            textfont=dict(color='#ffffff', size=11)
+            textfont=dict(color='#ffffff', size=12)
         )])
         
         fig6b.update_layout(
-            **CHART_TEMPLATE,
+            paper_bgcolor='rgba(0,0,0,0)',
+            plot_bgcolor='rgba(0,0,0,0)',
+            font=dict(color='#ffffff', family='Poppins'),
             title=dict(text='🥇 Top 3 NOC', font=dict(size=14, color='#ffffff')),
             height=350,
             margin=dict(l=40, r=40, t=60, b=40),
             yaxis_title='NOC'
         )
+        fig6b.update_xaxes(tickfont=dict(color='#ffffff'))
+        fig6b.update_yaxes(gridcolor='rgba(255,255,255,0.1)', tickfont=dict(color='#ffffff'))
         
         st.plotly_chart(fig6b, use_container_width=True)
     
-    # Top by Kontribusi
     with col_c:
         top_kontribusi = filtered_df.groupby('Category')[kontribusi_col].mean().sort_values(ascending=False).head(3).reset_index()
-        top_kontribusi['Category'] = 'Cat ' + top_kontribusi['Category'].astype(str)
+        top_kontribusi['Category_Label'] = 'Cat ' + top_kontribusi['Category'].astype(str)
         top_kontribusi['Kontribusi_Pct'] = top_kontribusi[kontribusi_col] * 100
         
         fig6c = go.Figure(data=[go.Bar(
-            x=top_kontribusi['Category'],
+            x=top_kontribusi['Category_Label'],
             y=top_kontribusi['Kontribusi_Pct'],
             marker=dict(color=['#ffd700', '#c0c0c0', '#cd7f32']),
             text=[f'{v:.2f}%' for v in top_kontribusi['Kontribusi_Pct']],
             textposition='outside',
-            textfont=dict(color='#ffffff', size=11)
+            textfont=dict(color='#ffffff', size=12)
         )])
         
         fig6c.update_layout(
-            **CHART_TEMPLATE,
+            paper_bgcolor='rgba(0,0,0,0)',
+            plot_bgcolor='rgba(0,0,0,0)',
+            font=dict(color='#ffffff', family='Poppins'),
             title=dict(text='🥇 Top 3 Kontribusi', font=dict(size=14, color='#ffffff')),
             height=350,
             margin=dict(l=40, r=40, t=60, b=40),
             yaxis_title='Kontribusi (%)'
         )
+        fig6c.update_xaxes(tickfont=dict(color='#ffffff'))
+        fig6c.update_yaxes(gridcolor='rgba(255,255,255,0.1)', tickfont=dict(color='#ffffff'))
         
         st.plotly_chart(fig6c, use_container_width=True)
     
@@ -805,19 +766,12 @@ def main():
     
     with st.expander("🔍 Lihat Detail Data", expanded=False):
         display_df = filtered_df.copy()
-        
-        # Format columns for display
         display_df['Sales Amount (Formatted)'] = display_df['Sales Amount'].apply(format_rupiah)
         display_df['NOC (Formatted)'] = display_df['NOC'].apply(format_number)
         display_df['Kontribusi (%)'] = (display_df[kontribusi_col] * 100).round(2).astype(str) + '%'
         
-        st.dataframe(
-            display_df,
-            use_container_width=True,
-            height=400
-        )
+        st.dataframe(display_df, use_container_width=True, height=400)
         
-        # Download button
         csv = filtered_df.to_csv(index=False).encode('utf-8')
         st.download_button(
             label="📥 Download Data (CSV)",
