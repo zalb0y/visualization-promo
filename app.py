@@ -272,7 +272,7 @@ def main():
     total_net_sales = filtered_df['Net Sales (by Group Category)'].sum()
     
     # KPI Cards
-    st.markdown("### 📈 Key Performance Indicators")
+    st.markdown("### 📈 Score Card")
     
     col1, col2, col3, col4, col5 = st.columns(5)
     
