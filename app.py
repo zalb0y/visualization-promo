@@ -343,22 +343,23 @@ def main():
     fig1 = make_subplots(specs=[[{"secondary_y": True}]])
     
     fig1.add_trace(
-        go.Bar(
-            x=chart1_data['X_Label'],
-            y=chart1_data['Sales Amount'],
-            name='Sales Amount',
-            marker=dict(
-                color=chart1_data['Sales Amount'],
-                colorscale=[[0, '#00d4ff'], [0.5, '#7b2cbf'], [1, '#ff6b6b']],
-                line=dict(color='rgba(255,255,255,0.3)', width=1)
-            ),
-            text=chart1_data['Sales_Label'],
-            textposition='outside',
-            textfont=dict(color='#ffffff', size=12),
-            hovertemplate='<b>%{x}</b><br>Sales: Rp %{y:,.0f}<extra></extra>'
+    go.Bar(
+        x=chart1_data['X_Label'],
+        y=chart1_data['Sales Amount'],
+        name='Sales Amount',
+        marker=dict(
+            color=chart1_data['Sales Amount'],
+            colorscale=[[0, '#00d4ff'], [0.5, '#7b2cbf'], [1, '#ff6b6b']],
+            line=dict(color='rgba(255,255,255,0.3)', width=1)
         ),
-        secondary_y=False
-    )
+        text=chart1_data['Sales_Label'],
+        textposition='inside',
+        insidetextanchor='start',
+        textfont=dict(color='#ffffff', size=11),
+        hovertemplate='<b>%{x}</b><br>Sales: Rp %{y:,.0f}<extra></extra>'
+    ),
+    secondary_y=False
+)
     
     fig1.add_trace(
         go.Scatter(
