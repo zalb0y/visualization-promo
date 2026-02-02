@@ -145,7 +145,7 @@ st.markdown("---")
 st.markdown(
     """
     <div style='text-align: center; color: #a0aec0; padding: 2rem;'>
-        <p>🏠 Analytics Dashboard | Built with ❤️ using Streamlit</p>
+        <p>🏠 Analytics Dashboard | Made by zalb0y using Streamlit</p>
     </div>
     """,
     unsafe_allow_html=True
