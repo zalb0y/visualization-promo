@@ -117,7 +117,7 @@ with col1:
     </div>
     """, unsafe_allow_html=True)
     if st.button("Buka Promo Dashboard", use_container_width=True):
-        st.switch_page("pages/1_📊_Promo_Dashboard.py")
+        st.switch_page("pages/1_Promo_Dashboard.py")
 
 with col2:
     st.markdown("""
@@ -128,7 +128,7 @@ with col2:
     </div>
     """, unsafe_allow_html=True)
     if st.button("Buka Ended Promo", use_container_width=True):
-        st.switch_page("pages/2_📈_Ended_Promo.py")
+        st.switch_page("pages/2_Ended_Promo.py")
 
 with col3:
     st.markdown("""
