@@ -13,6 +13,15 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
+# Hide sidebar navigation
+st.markdown("""
+<style>
+    [data-testid="stSidebarNav"] {
+        display: none;
+    }
+</style>
+""", unsafe_allow_html=True)
+
 # Custom CSS - Dark Theme dengan kontras tinggi
 st.markdown("""
 <style>
