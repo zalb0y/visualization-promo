@@ -871,7 +871,7 @@ def main():
     st.markdown(
         """
         <div style='text-align: center; color: #6b7280; padding: 1rem;'>
-            <p style='color: #a0aec0;'>📊 Promo Performance Dashboard | Built with ❤️ using Streamlit & Plotly</p>
+            <p style='color: #a0aec0;'>📊 Promo 2025 Performance Dashboard</p>
         </div>
         """,
         unsafe_allow_html=True
