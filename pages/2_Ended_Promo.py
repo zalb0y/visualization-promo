@@ -199,7 +199,7 @@ def format_rupiah(value):
         return f"Rp {value:,.0f}"
 
 def format_billion(value):
-    return f"Rp {value/1e9:.2f} B"
+    return f"Rp {value/1e9:.2f} M"
 
 def format_number(value):
     return f"{value:,.0f}"
