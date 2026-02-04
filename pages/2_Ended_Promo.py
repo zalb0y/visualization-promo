@@ -302,15 +302,39 @@ def main():
                 "🏷️ Filter Category (Sales)",
                 options=all_cat_sales,
                 default=all_cat_sales,
-                format_func=lambda x: f"Category {int(x)}"
+                format_func=lambda x: f"Category {int(x)}",
+                key="cat_sales_promo"
             )
+            
+            # Filter Promo Name (Sales) - berdasarkan category yang dipilih
+            filtered_promo_sales = df_sales_promo[df_sales_promo['Category'].isin(selected_cat_sales)]
+            all_promo_sales = sorted(filtered_promo_sales['Promo Name'].dropna().unique())
+            selected_promo_sales = st.multiselect(
+                "📝 Filter Nama Promo (Sales)",
+                options=all_promo_sales,
+                default=all_promo_sales,
+                key="promo_sales"
+            )
+            
+            st.markdown("---")
             
             all_cat_qty = sorted(df_qty_promo['Category'].dropna().unique())
             selected_cat_qty = st.multiselect(
                 "🏷️ Filter Category (Qty)",
                 options=all_cat_qty,
                 default=all_cat_qty,
-                format_func=lambda x: f"Category {int(x)}"
+                format_func=lambda x: f"Category {int(x)}",
+                key="cat_qty_promo"
+            )
+            
+            # Filter Promo Name (Qty) - berdasarkan category yang dipilih
+            filtered_promo_qty = df_qty_promo[df_qty_promo['Category'].isin(selected_cat_qty)]
+            all_promo_qty = sorted(filtered_promo_qty['Promo Name'].dropna().unique())
+            selected_promo_qty = st.multiselect(
+                "📝 Filter Nama Promo (Qty)",
+                options=all_promo_qty,
+                default=all_promo_qty,
+                key="promo_qty"
             )
         else:
             all_cat_sales = sorted(df_sales_cat['Category'].dropna().unique())
@@ -318,7 +342,8 @@ def main():
                 "🏷️ Filter Category (Sales)",
                 options=all_cat_sales,
                 default=all_cat_sales,
-                format_func=lambda x: f"Category {int(x)}"
+                format_func=lambda x: f"Category {int(x)}",
+                key="cat_sales_cat"
             )
             
             all_cat_qty = sorted(df_qty_cat['Category'].dropna().unique())
@@ -326,19 +351,30 @@ def main():
                 "🏷️ Filter Category (Qty)",
                 options=all_cat_qty,
                 default=all_cat_qty,
-                format_func=lambda x: f"Category {int(x)}"
+                format_func=lambda x: f"Category {int(x)}",
+                key="cat_qty_cat"
             )
-        
+            
+            # Placeholder untuk konsistensi
+            selected_promo_sales = None
+            selected_promo_qty = None
+            
         st.markdown("---")
         st.markdown("### 📌 Info")
         st.info(f"**View:** {view_option}")
     
     # Filter data based on selection
     if view_option == 'Per Promo':
-        df_sales = df_sales_promo[df_sales_promo['Category'].isin(selected_cat_sales)].copy()
+        df_sales = df_sales_promo[
+            (df_sales_promo['Category'].isin(selected_cat_sales)) &
+            (df_sales_promo['Promo Name'].isin(selected_promo_sales))
+        ].copy()
         df_sales['Label'] = df_sales['Promo Name'].apply(lambda x: x[:35] + '...' if len(str(x)) > 35 else x)
         
-        df_qty = df_qty_promo[df_qty_promo['Category'].isin(selected_cat_qty)].copy()
+        df_qty = df_qty_promo[
+            (df_qty_promo['Category'].isin(selected_cat_qty)) &
+            (df_qty_promo['Promo Name'].isin(selected_promo_qty))
+        ].copy()
         df_qty['Label'] = df_qty['Promo Name'].apply(lambda x: x[:35] + '...' if len(str(x)) > 35 else x)
     else:
         df_sales = df_sales_cat[df_sales_cat['Category'].isin(selected_cat_sales)].copy()
