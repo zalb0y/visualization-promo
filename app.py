@@ -125,7 +125,7 @@ with col1:
         <div class="menu-desc">Visualisasi performa promosi 2025</div>
     </div>
     """, unsafe_allow_html=True)
-    if st.button("Buka Dashboard, use_container_width=True):
+    if st.button("Buka Dashboard", use_container_width=True):
         st.switch_page("pages/1_Promo_Dashboard.py")
 
 with col2:
