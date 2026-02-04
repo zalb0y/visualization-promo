@@ -554,7 +554,7 @@ def main():
     st.markdown(
         """
         <div style='text-align: center; color: #a0aec0; padding: 1rem;'>
-            <p>📈 Ended Promo Dashboard - January 2026 | Built with ❤️ using Streamlit & Plotly</p>
+            <p>📈 Ended Promo Dashboard - January 2026</p>
         </div>
         """,
         unsafe_allow_html=True
