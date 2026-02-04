@@ -125,7 +125,7 @@ with col1:
         <div class="menu-desc">Visualisasi performa promosi 2025</div>
     </div>
     """, unsafe_allow_html=True)
-    if st.button("Buka Dashboard", use_container_width=True):
+    if st.button("Buka Dashboard", use_container_width=True, key="btn_promo_2025"):
         st.switch_page("pages/1_Promo_Dashboard.py")
 
 with col2:
@@ -133,10 +133,10 @@ with col2:
     <div class="menu-card">
         <div class="menu-icon">📈</div>
         <div class="menu-title">Promo 2026</div>
-        <div class="menu-desc">Visualisasi  performa promosi 2025</div>
+        <div class="menu-desc">Visualisasi performa promosi 2026</div>
     </div>
     """, unsafe_allow_html=True)
-    if st.button("Buka Dashboard", use_container_width=True):
+    if st.button("Buka Dashboard", use_container_width=True, key="btn_promo_2026"):
         st.switch_page("pages/2_Ended_Promo.py")
 
 with col3:
