@@ -272,9 +272,9 @@ def main():
     
     # Load data
     try:
-        df_sales_promo, df_sales_cat, df_qty_promo, df_qty_cat = load_data('Final_Summary_Ended_Promo_Jan_2026__Last.xlsx')
+        df_sales_promo, df_sales_cat, df_qty_promo, df_qty_cat = load_data('Final_Summary_Ended_Promo_Jan_2026_Last.xlsx')
     except FileNotFoundError:
-        st.error("⚠️ File 'Final_Summary_Ended_Promo_Jan_2026__Last.xlsx' tidak ditemukan.")
+        st.error("⚠️ File 'Final_Summary_Ended_Promo_Jan_2026_Last.xlsx' tidak ditemukan.")
         st.stop()
     
     # Sidebar
