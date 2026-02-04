@@ -121,7 +121,7 @@ with col1:
     st.markdown("""
     <div class="menu-card">
         <div class="menu-icon">📊</div>
-        <div class="menu-title">Promo 2025/div>
+        <div class="menu-title">Promo 2025</div>
         <div class="menu-desc">Visualisasi performa promosi 2025</div>
     </div>
     """, unsafe_allow_html=True)
