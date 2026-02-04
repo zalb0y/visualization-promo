@@ -97,7 +97,7 @@ st.markdown("""
 
 # Header
 st.markdown('<h1 class="main-header">🏠 Analytics Dashboard</h1>', unsafe_allow_html=True)
-st.markdown('<p class="sub-header">Pilih dashboard yang ingin Anda lihat dari menu dibawah r</p>', unsafe_allow_html=True)
+st.markdown('<p class="sub-header">Pilih dashboard yang ingin Anda lihat dari menu dibawah </p>', unsafe_allow_html=True)
 
 # Sidebar info
 with st.sidebar:
