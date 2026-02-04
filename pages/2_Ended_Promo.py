@@ -211,9 +211,14 @@ def main():
         st.stop()
     
     # Sidebar
+    # Sidebar
     with st.sidebar:
-        st.markdown("## 🎛️ Filter & View")
+        # Tombol kembali ke Home
+        if st.button("🏠 Kembali ke Home", use_container_width=True):
+            st.switch_page("app.py")
+        
         st.markdown("---")
+        st.markdown("## 🎛️ Filter & View")
         
         view_option = st.radio(
             "📊 Pilih Tampilan",
