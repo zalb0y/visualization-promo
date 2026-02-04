@@ -1,8 +1,7 @@
 import streamlit as st
 import pandas as pd
-import plotly.express as px
 import plotly.graph_objects as go
-from plotly.subplots import make_subplots
+import numpy as np
 
 # Page Configuration
 st.set_page_config(
@@ -35,13 +34,13 @@ st.markdown("""
     }
     
     .main-header {
-        font-size: 2.8rem;
+        font-size: 2.5rem;
         font-weight: 800;
         background: linear-gradient(135deg, #00d4ff 0%, #7b2cbf 50%, #ff6b6b 100%);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
         text-align: center;
-        padding: 1.5rem 0;
+        padding: 1rem 0;
         margin-bottom: 0.5rem;
     }
     
@@ -70,7 +69,7 @@ st.markdown("""
     }
     
     .metric-value {
-        font-size: 1.8rem;
+        font-size: 1.6rem;
         font-weight: 700;
         background: linear-gradient(135deg, #00d4ff 0%, #7b2cbf 100%);
         -webkit-background-clip: text;
@@ -78,7 +77,7 @@ st.markdown("""
     }
     
     .metric-label {
-        font-size: 0.85rem;
+        font-size: 0.8rem;
         color: #a0aec0;
         text-transform: uppercase;
         letter-spacing: 1.5px;
@@ -86,7 +85,7 @@ st.markdown("""
     }
     
     .section-title {
-        font-size: 1.4rem;
+        font-size: 1.3rem;
         font-weight: 600;
         color: #ffffff;
         margin-bottom: 1rem;
@@ -129,15 +128,64 @@ st.markdown("""
 def load_data(file_path):
     xlsx = pd.ExcelFile(file_path)
     
-    df_sales = pd.read_excel(xlsx, sheet_name='Sales')
-    df_sales = df_sales.dropna(how='all')
-    df_sales = df_sales.dropna(subset=['Category'])
+    # Load raw data
+    df_sales_raw = pd.read_excel(xlsx, sheet_name='Sales', header=None)
+    df_qty_raw = pd.read_excel(xlsx, sheet_name='Qty', header=None)
     
-    df_qty = pd.read_excel(xlsx, sheet_name='Qty')
-    df_qty = df_qty.dropna(how='all')
-    df_qty = df_qty.dropna(subset=['Cat'])
+    # Extract Summary by Promo (Sales) - rows 6-22
+    df_sales_promo = df_sales_raw.iloc[6:22, :11].copy()
+    df_sales_promo.columns = ['Category', 'Promo Name', 'End of Period Promotion', 'Total Count',
+                              'Total Claim', 'NOC', 'Conversion Rate (Count/NOC)',
+                              'Conversion Rate (Claim/Count)', 'Sales Amount',
+                              'Net Sales (by Category)', 'Contribution Sales']
+    df_sales_promo = df_sales_promo.iloc[1:].reset_index(drop=True)
     
-    return df_sales, df_qty
+    # Extract Summary by Category (Sales) - rows 26-33
+    df_sales_cat = df_sales_raw.iloc[26:33, :10].copy()
+    df_sales_cat.columns = ['Category', 'End of Period Promotion', 'Total Count', 'Total Claim',
+                            'NOC', 'Conversion Rate (Claim/Count)', 'Conversion Rate (Count/NOC)',
+                            'Sales Amount', 'Net Sales (by Category)', 'Contribution Sales']
+    df_sales_cat = df_sales_cat.iloc[1:].reset_index(drop=True)
+    
+    # Convert numeric columns - Sales Promo
+    numeric_cols_promo = ['Category', 'Total Count', 'Total Claim', 'NOC',
+                          'Conversion Rate (Count/NOC)', 'Conversion Rate (Claim/Count)',
+                          'Sales Amount', 'Net Sales (by Category)', 'Contribution Sales']
+    for col in numeric_cols_promo:
+        df_sales_promo[col] = pd.to_numeric(df_sales_promo[col], errors='coerce')
+    
+    # Convert numeric columns - Sales Category
+    numeric_cols_cat = ['Category', 'Total Count', 'Total Claim', 'NOC',
+                        'Conversion Rate (Claim/Count)', 'Conversion Rate (Count/NOC)',
+                        'Sales Amount', 'Net Sales (by Category)', 'Contribution Sales']
+    for col in numeric_cols_cat:
+        df_sales_cat[col] = pd.to_numeric(df_sales_cat[col], errors='coerce')
+    
+    # Extract Summary by Promo (Qty) - rows 6-16
+    df_qty_promo = df_qty_raw.iloc[6:16, :8].copy()
+    df_qty_promo.columns = ['Category', 'Promo Name', 'End of Period Promotion', 'Total Count',
+                            'Total Claim', 'NOC', 'Conversion Rate (Claim/Count)',
+                            'Conversion Rate (Count/NOC)']
+    df_qty_promo = df_qty_promo.iloc[1:].reset_index(drop=True)
+    
+    # Extract Summary by Category (Qty) - rows 20-25
+    df_qty_cat = df_qty_raw.iloc[20:25, :7].copy()
+    df_qty_cat.columns = ['Category', 'End of Period Promotion', 'Total Count', 'Total Claim',
+                          'NOC', 'Conversion Rate (Claim/Count)', 'Conversion Rate (Count/NOC)']
+    df_qty_cat = df_qty_cat.iloc[1:].reset_index(drop=True)
+    
+    # Convert numeric columns - Qty
+    numeric_cols_qty_promo = ['Category', 'Total Count', 'Total Claim', 'NOC',
+                              'Conversion Rate (Claim/Count)', 'Conversion Rate (Count/NOC)']
+    for col in numeric_cols_qty_promo:
+        df_qty_promo[col] = pd.to_numeric(df_qty_promo[col], errors='coerce')
+        
+    numeric_cols_qty_cat = ['Category', 'Total Count', 'Total Claim', 'NOC',
+                            'Conversion Rate (Claim/Count)', 'Conversion Rate (Count/NOC)']
+    for col in numeric_cols_qty_cat:
+        df_qty_cat[col] = pd.to_numeric(df_qty_cat[col], errors='coerce')
+    
+    return df_sales_promo, df_sales_cat, df_qty_promo, df_qty_cat
 
 # Format functions
 def format_rupiah(value):
@@ -150,52 +198,71 @@ def format_rupiah(value):
     else:
         return f"Rp {value:,.0f}"
 
-def format_short_rupiah(value):
-    if value >= 1e12:
-        return f"{value/1e12:.1f}T"
-    elif value >= 1e9:
-        return f"{value/1e9:.2f}M"
-    elif value >= 1e6:
-        return f"{value/1e6:.1f}Jt"
+def format_billion(value):
+    return f"Rp {value/1e9:.2f} B"
+
+def format_number(value):
+    return f"{value:,.0f}"
+
+# Create horizontal bar chart
+def create_bar_chart(df, x_col, y_col, title, x_label, color_scale, label_format='value', show_detail=False, detail_cols=None):
+    df_sorted = df.sort_values(x_col, ascending=True).reset_index(drop=True)
+    
+    # Prepare colors
+    values = df_sorted[x_col].values
+    if color_scale == 'Blues':
+        colors = [f'rgba({int(65 + 150*(1-i/len(values)))}, {int(105 + 100*(1-i/len(values)))}, {int(225)}, 0.9)' for i in range(len(values))]
+    elif color_scale == 'Greens':
+        colors = [f'rgba({int(50)}, {int(150 + 80*(1-i/len(values)))}, {int(80 + 80*(1-i/len(values)))}, 0.9)' for i in range(len(values))]
+    elif color_scale == 'Reds':
+        normalized = values / max(values) if max(values) > 0 else values
+        colors = [f'rgba({int(255)}, {int(100 + 100*(1-n))}, {int(100*(1-n))}, 0.9)' for n in normalized]
+    elif color_scale == 'Oranges':
+        colors = [f'rgba({int(255)}, {int(180 - 80*i/len(values))}, {int(50)}, 0.9)' for i in range(len(values))]
     else:
-        return f"{value:,.0f}"
-
-def format_percent(value):
-    return f"{value*100:.2f}%"
-
-# Aggregate function for Category view
-def aggregate_sales_by_category(df):
-    agg_df = df.groupby('Category').agg({
-        'Promo Name': 'count',
-        'Total Count': 'sum',
-        'Total Claim': 'sum',
-        'NOC': 'first',
-        'Sales Amount': 'sum',
-        'Net Sales (by Category)': 'first',
-        'Contribution Sales': 'sum'
-    }).reset_index()
+        colors = [f'rgba(0, 212, 255, 0.8)'] * len(values)
     
-    agg_df = agg_df.rename(columns={'Promo Name': 'Jumlah Promo'})
-    agg_df['Conversion Rate (Claim/Count)'] = agg_df['Total Claim'] / agg_df['Total Count']
-    agg_df['Conversion Rate (Count/NOC)'] = agg_df['Total Count'] / agg_df['NOC']
-    agg_df['Category'] = 'Category ' + agg_df['Category'].astype(int).astype(str)
+    # Format labels
+    if label_format == 'billion':
+        text_labels = [f'Rp {v/1e9:.2f} B' for v in values]
+    elif label_format == 'percent':
+        text_labels = [f'{v*100:.2f}%' for v in values]
+    elif label_format == 'percent_detail' and show_detail and detail_cols:
+        claim_col, count_col = detail_cols
+        text_labels = [f'{v*100:.1f}%  ({int(c):,} / {int(t):,})' 
+                      for v, c, t in zip(values, df_sorted[claim_col], df_sorted[count_col])]
+    else:
+        text_labels = [f'{v:,.0f}' for v in values]
     
-    return agg_df
-
-def aggregate_qty_by_category(df):
-    agg_df = df.groupby('Cat').agg({
-        'Nama Promo': 'count',
-        'Total Count': 'sum',
-        'Total Claim': 'sum',
-        'NOC': 'first'
-    }).reset_index()
+    fig = go.Figure(data=[go.Bar(
+        x=values,
+        y=df_sorted[y_col],
+        orientation='h',
+        marker=dict(
+            color=colors[::-1],
+            line=dict(color='rgba(255,255,255,0.3)', width=1)
+        ),
+        text=text_labels,
+        textposition='outside',
+        textfont=dict(color='#ffffff', size=11, family='Poppins'),
+        hovertemplate='<b>%{y}</b><br>' + x_label + ': %{x:,.2f}<extra></extra>'
+    )])
     
-    agg_df = agg_df.rename(columns={'Nama Promo': 'Jumlah Promo', 'Cat': 'Category'})
-    agg_df['Conversion Rate(Claim/Count)'] = agg_df['Total Claim'] / agg_df['Total Count']
-    agg_df['Conversion Rate(Count/NOC)'] = agg_df['Total Count'] / agg_df['NOC']
-    agg_df['Category'] = 'Category ' + agg_df['Category'].astype(int).astype(str)
+    fig.update_layout(
+        paper_bgcolor='rgba(0,0,0,0)',
+        plot_bgcolor='rgba(0,0,0,0)',
+        font=dict(color='#ffffff', family='Poppins'),
+        title=dict(text=title, font=dict(size=16, color='#ffffff'), x=0.5),
+        xaxis_title=x_label,
+        yaxis_title='',
+        height=max(350, len(df_sorted) * 45),
+        margin=dict(l=250, r=120, t=60, b=60)
+    )
     
-    return agg_df
+    fig.update_xaxes(gridcolor='rgba(255,255,255,0.1)', tickfont=dict(color='#ffffff', size=10))
+    fig.update_yaxes(tickfont=dict(color='#ffffff', size=10))
+    
+    return fig
 
 # Main App
 def main():
@@ -205,12 +272,11 @@ def main():
     
     # Load data
     try:
-        df_sales, df_qty = load_data('Final_Summary_Ended_Promo_Jan_2026.xlsx')
+        df_sales_promo, df_sales_cat, df_qty_promo, df_qty_cat = load_data('Final_Summary_Ended_Promo_Jan_2026__Last.xlsx')
     except FileNotFoundError:
-        st.error("⚠️ File 'Final_Summary_Ended_Promo_Jan_2026.xlsx' tidak ditemukan.")
+        st.error("⚠️ File 'Final_Summary_Ended_Promo_Jan_2026__Last.xlsx' tidak ditemukan.")
         st.stop()
     
-    # Sidebar
     # Sidebar
     with st.sidebar:
         # Tombol kembali ke Home
@@ -229,404 +295,223 @@ def main():
         
         st.markdown("---")
         
-        # Category filter for Sales
-        all_categories_sales = sorted(df_sales['Category'].unique())
-        selected_categories_sales = st.multiselect(
-            "🏷️ Filter Category (Sales)",
-            options=all_categories_sales,
-            default=all_categories_sales,
-            format_func=lambda x: f"Category {int(x)}"
-        )
-        
-        st.markdown("---")
-        
-        # Category filter for Qty
-        all_categories_qty = sorted(df_qty['Cat'].unique())
-        selected_categories_qty = st.multiselect(
-            "🏷️ Filter Category (Qty)",
-            options=all_categories_qty,
-            default=all_categories_qty,
-            format_func=lambda x: f"Category {int(x)}"
-        )
+        # Filter Category for Sales
+        if view_option == 'Per Promo':
+            all_cat_sales = sorted(df_sales_promo['Category'].dropna().unique())
+            selected_cat_sales = st.multiselect(
+                "🏷️ Filter Category (Sales)",
+                options=all_cat_sales,
+                default=all_cat_sales,
+                format_func=lambda x: f"Category {int(x)}"
+            )
+            
+            all_cat_qty = sorted(df_qty_promo['Category'].dropna().unique())
+            selected_cat_qty = st.multiselect(
+                "🏷️ Filter Category (Qty)",
+                options=all_cat_qty,
+                default=all_cat_qty,
+                format_func=lambda x: f"Category {int(x)}"
+            )
+        else:
+            all_cat_sales = sorted(df_sales_cat['Category'].dropna().unique())
+            selected_cat_sales = st.multiselect(
+                "🏷️ Filter Category (Sales)",
+                options=all_cat_sales,
+                default=all_cat_sales,
+                format_func=lambda x: f"Category {int(x)}"
+            )
+            
+            all_cat_qty = sorted(df_qty_cat['Category'].dropna().unique())
+            selected_cat_qty = st.multiselect(
+                "🏷️ Filter Category (Qty)",
+                options=all_cat_qty,
+                default=all_cat_qty,
+                format_func=lambda x: f"Category {int(x)}"
+            )
         
         st.markdown("---")
         st.markdown("### 📌 Info")
         st.info(f"**View:** {view_option}")
     
-    # Filter data
-    filtered_sales = df_sales[df_sales['Category'].isin(selected_categories_sales)].copy()
-    filtered_qty = df_qty[df_qty['Cat'].isin(selected_categories_qty)].copy()
-    
-    if filtered_sales.empty and filtered_qty.empty:
-        st.warning("⚠️ Tidak ada data yang sesuai dengan filter.")
-        st.stop()
+    # Filter data based on selection
+    if view_option == 'Per Promo':
+        df_sales = df_sales_promo[df_sales_promo['Category'].isin(selected_cat_sales)].copy()
+        df_sales['Label'] = df_sales['Promo Name'].apply(lambda x: x[:35] + '...' if len(str(x)) > 35 else x)
+        
+        df_qty = df_qty_promo[df_qty_promo['Category'].isin(selected_cat_qty)].copy()
+        df_qty['Label'] = df_qty['Promo Name'].apply(lambda x: x[:35] + '...' if len(str(x)) > 35 else x)
+    else:
+        df_sales = df_sales_cat[df_sales_cat['Category'].isin(selected_cat_sales)].copy()
+        df_sales['Label'] = 'Category ' + df_sales['Category'].astype(int).astype(str)
+        
+        df_qty = df_qty_cat[df_qty_cat['Category'].isin(selected_cat_qty)].copy()
+        df_qty['Label'] = 'Category ' + df_qty['Category'].astype(int).astype(str)
     
     # Tabs
     tab_sales, tab_qty = st.tabs(["💰 SALES", "📦 QTY"])
     
     # ==================== TAB SALES ====================
     with tab_sales:
-        if filtered_sales.empty:
+        if df_sales.empty:
             st.warning("⚠️ Tidak ada data Sales untuk kategori yang dipilih.")
         else:
-            # Prepare data based on view
-            if view_option == 'Per Promo':
-                display_df = filtered_sales.copy()
-                display_df['Label'] = display_df['Promo Name']
-                name_col = 'Promo Name'
-                conv_claim_col = 'Conversion Rate (Claim/Count)'
-                conv_noc_col = 'Conversion Rate (Count/NOC)'
-            else:
-                display_df = aggregate_sales_by_category(filtered_sales)
-                display_df['Label'] = display_df['Category']
-                name_col = 'Category'
-                conv_claim_col = 'Conversion Rate (Claim/Count)'
-                conv_noc_col = 'Conversion Rate (Count/NOC)'
-            
             # KPI Cards
             st.markdown("### 📈 Key Performance Indicators")
             
             col1, col2, col3, col4 = st.columns(4)
             
-            total_sales = display_df['Sales Amount'].sum()
-            total_promo = len(filtered_sales) if view_option == 'Per Promo' else display_df['Jumlah Promo'].sum()
-            avg_conv_claim = display_df[conv_claim_col].mean()
-            avg_conv_noc = display_df[conv_noc_col].mean()
+            total_sales = df_sales['Sales Amount'].sum()
+            total_promo = len(df_sales)
+            avg_conv_claim = df_sales['Conversion Rate (Claim/Count)'].mean()
+            avg_conv_noc = df_sales['Conversion Rate (Count/NOC)'].mean()
             
             with col1:
                 st.markdown(f"""
                 <div class="metric-container">
                     <div class="metric-value">{format_rupiah(total_sales)}</div>
-                    <div class="metric-label">💰 Total Sales Amount</div>
+                    <div class="metric-label">💰 Total Sales</div>
                 </div>
                 """, unsafe_allow_html=True)
             
             with col2:
                 st.markdown(f"""
                 <div class="metric-container">
-                    <div class="metric-value">{int(total_promo)}</div>
-                    <div class="metric-label">🎯 Jumlah Promo</div>
+                    <div class="metric-value">{total_promo}</div>
+                    <div class="metric-label">🎯 Jumlah {'Promo' if view_option == 'Per Promo' else 'Category'}</div>
                 </div>
                 """, unsafe_allow_html=True)
             
             with col3:
                 st.markdown(f"""
                 <div class="metric-container">
-                    <div class="metric-value">{format_percent(avg_conv_claim)}</div>
-                    <div class="metric-label">📊 Avg Conv. (Claim/Count)</div>
+                    <div class="metric-value">{avg_conv_claim*100:.2f}%</div>
+                    <div class="metric-label">📊 Avg Claim/Count</div>
                 </div>
                 """, unsafe_allow_html=True)
             
             with col4:
                 st.markdown(f"""
                 <div class="metric-container">
-                    <div class="metric-value">{format_percent(avg_conv_noc)}</div>
-                    <div class="metric-label">👥 Avg Conv. (Count/NOC)</div>
+                    <div class="metric-value">{avg_conv_noc*100:.4f}%</div>
+                    <div class="metric-label">👥 Avg Count/NOC</div>
                 </div>
                 """, unsafe_allow_html=True)
             
             st.markdown("<br>", unsafe_allow_html=True)
             
             # Chart 1: Sales Amount Ranking
-            st.markdown('<p class="section-title">💰 Ranking Sales Amount</p>', unsafe_allow_html=True)
+            st.markdown(f'<p class="section-title">💰 Ranking Sales Amount (by {view_option.replace("Per ", "")})</p>', unsafe_allow_html=True)
             
-            sales_sorted = display_df.sort_values('Sales Amount', ascending=True)
-            sales_sorted['Sales_Label'] = sales_sorted['Sales Amount'].apply(format_short_rupiah)
-            
-            fig1 = go.Figure(data=[go.Bar(
-                x=sales_sorted['Sales Amount'],
-                y=sales_sorted['Label'],
-                orientation='h',
-                marker=dict(
-                    color=sales_sorted['Sales Amount'],
-                    colorscale=[[0, '#00d4ff'], [0.5, '#7b2cbf'], [1, '#ff6b6b']],
-                    line=dict(color='rgba(255,255,255,0.3)', width=1)
-                ),
-                text=sales_sorted['Sales_Label'],
-                textposition='outside',
-                textfont=dict(color='#ffffff', size=11),
-                hovertemplate='<b>%{y}</b><br>Sales: Rp %{x:,.0f}<extra></extra>'
-            )])
-            
-            fig1.update_layout(
-                paper_bgcolor='rgba(0,0,0,0)',
-                plot_bgcolor='rgba(0,0,0,0)',
-                font=dict(color='#ffffff', family='Poppins'),
-                xaxis_title='Sales Amount (Rp)',
-                yaxis_title='',
-                height=400 if view_option == 'Per Category' else 500,
-                margin=dict(l=250 if view_option == 'Per Promo' else 120, r=80, t=20, b=60)
+            fig1 = create_bar_chart(
+                df_sales, 'Sales Amount', 'Label',
+                '', 'Sales Amount (Billion Rp)',
+                'Blues', label_format='billion'
             )
-            fig1.update_xaxes(gridcolor='rgba(255,255,255,0.1)', tickfont=dict(color='#ffffff'))
-            fig1.update_yaxes(tickfont=dict(color='#ffffff', size=11))
-            
             st.plotly_chart(fig1, use_container_width=True)
             
-            # Chart 2: Kontribusi Sales (Treemap for Per Promo, Donut for Per Category)
-            st.markdown('<p class="section-title">📊 Kontribusi terhadap Net Sales</p>', unsafe_allow_html=True)
+            # Chart 2: Contribution Sales Ranking
+            st.markdown(f'<p class="section-title">📊 Ranking Contribution Sales (by {view_option.replace("Per ", "")})</p>', unsafe_allow_html=True)
             
-            contrib_df = display_df.copy()
-            contrib_df['Contribution_Pct'] = contrib_df['Contribution Sales'] * 100
-            contrib_df['Contrib_Label'] = contrib_df['Contribution_Pct'].apply(lambda x: f'{x:.2f}%')
-            
-            if view_option == 'Per Promo':
-                # Treemap for Per Promo
-                fig2 = px.treemap(
-                    contrib_df,
-                    path=['Label'],
-                    values='Contribution Sales',
-                    color='Contribution_Pct',
-                    color_continuous_scale=[[0, '#00d4ff'], [0.5, '#7b2cbf'], [1, '#ff6b6b']],
-                    hover_data={'Contribution_Pct': ':.2f'}
-                )
-                fig2.update_traces(
-                    textinfo='label+percent root',
-                    textfont=dict(color='#ffffff', size=12),
-                    hovertemplate='<b>%{label}</b><br>Kontribusi: %{value:.4f}<br>Persentase: %{percentRoot:.2%}<extra></extra>'
-                )
-                fig2.update_layout(
-                    paper_bgcolor='rgba(0,0,0,0)',
-                    plot_bgcolor='rgba(0,0,0,0)',
-                    font=dict(color='#ffffff', family='Poppins'),
-                    height=450,
-                    margin=dict(l=20, r=20, t=20, b=20),
-                    coloraxis_showscale=False
-                )
-            else:
-                # Donut for Per Category
-                fig2 = go.Figure(data=[go.Pie(
-                    labels=contrib_df['Label'],
-                    values=contrib_df['Contribution Sales'],
-                    hole=0.5,
-                    marker=dict(
-                        colors=['#00d4ff', '#9b5de5', '#f15bb5', '#00f5d4', '#fee440', '#ff6b6b', '#00bbf9'],
-                        line=dict(color='#1a1a2e', width=3)
-                    ),
-                    textinfo='label+percent',
-                    textfont=dict(color='#ffffff', size=12),
-                    hovertemplate='<b>%{label}</b><br>Kontribusi: %{value:.4f}<br>Persentase: %{percent}<extra></extra>'
-                )])
-                fig2.update_layout(
-                    paper_bgcolor='rgba(0,0,0,0)',
-                    plot_bgcolor='rgba(0,0,0,0)',
-                    font=dict(color='#ffffff', family='Poppins'),
-                    height=400,
-                    margin=dict(l=20, r=20, t=20, b=20),
-                    showlegend=True,
-                    legend=dict(font=dict(color='#ffffff'))
-                )
-            
+            fig2 = create_bar_chart(
+                df_sales, 'Contribution Sales', 'Label',
+                '', 'Contribution Sales (%)',
+                'Greens', label_format='percent'
+            )
             st.plotly_chart(fig2, use_container_width=True)
             
-            # Chart 3 & 4: Conversion Rates (Side by Side)
-            col_left, col_right = st.columns(2)
+            # Chart 3: Conversion Rate (Claim/Count)
+            st.markdown(f'<p class="section-title">🔄 Conversion Rate - Claim/Count (by {view_option.replace("Per ", "")})</p>', unsafe_allow_html=True)
             
-            with col_left:
-                st.markdown('<p class="section-title">🔄 Conversion Rate (Claim/Count)</p>', unsafe_allow_html=True)
-                
-                conv1_df = display_df.sort_values(conv_claim_col, ascending=True).copy()
-                conv1_df['Conv_Label'] = conv1_df[conv_claim_col].apply(lambda x: f'{x*100:.2f}%')
-                
-                fig3 = go.Figure(data=[go.Bar(
-                    x=conv1_df[conv_claim_col] * 100,
-                    y=conv1_df['Label'],
-                    orientation='h',
-                    marker=dict(
-                        color=conv1_df[conv_claim_col],
-                        colorscale=[[0, '#ff6b6b'], [0.5, '#fee440'], [1, '#00f5d4']],
-                        line=dict(color='rgba(255,255,255,0.3)', width=1)
-                    ),
-                    text=conv1_df['Conv_Label'],
-                    textposition='outside',
-                    textfont=dict(color='#ffffff', size=10),
-                    hovertemplate='<b>%{y}</b><br>Conversion: %{x:.2f}%<extra></extra>'
-                )])
-                
-                fig3.update_layout(
-                    paper_bgcolor='rgba(0,0,0,0)',
-                    plot_bgcolor='rgba(0,0,0,0)',
-                    font=dict(color='#ffffff', family='Poppins'),
-                    xaxis_title='Conversion Rate (%)',
-                    yaxis_title='',
-                    height=400 if view_option == 'Per Category' else 500,
-                    margin=dict(l=200 if view_option == 'Per Promo' else 100, r=60, t=20, b=60)
-                )
-                fig3.update_xaxes(gridcolor='rgba(255,255,255,0.1)', tickfont=dict(color='#ffffff'))
-                fig3.update_yaxes(tickfont=dict(color='#ffffff', size=10))
-                
-                st.plotly_chart(fig3, use_container_width=True)
+            fig3 = create_bar_chart(
+                df_sales, 'Conversion Rate (Claim/Count)', 'Label',
+                '', 'Conversion Rate (%)',
+                'Reds', label_format='percent_detail',
+                show_detail=True, detail_cols=['Total Claim', 'Total Count']
+            )
+            st.plotly_chart(fig3, use_container_width=True)
             
-            with col_right:
-                st.markdown('<p class="section-title">👥 Conversion Rate (Count/NOC)</p>', unsafe_allow_html=True)
-                
-                conv2_df = display_df.sort_values(conv_noc_col, ascending=True).copy()
-                conv2_df['Conv_Label'] = conv2_df[conv_noc_col].apply(lambda x: f'{x*100:.4f}%')
-                
-                fig4 = go.Figure(data=[go.Bar(
-                    x=conv2_df[conv_noc_col] * 100,
-                    y=conv2_df['Label'],
-                    orientation='h',
-                    marker=dict(
-                        color=conv2_df[conv_noc_col],
-                        colorscale=[[0, '#ff6b6b'], [0.5, '#fee440'], [1, '#00f5d4']],
-                        line=dict(color='rgba(255,255,255,0.3)', width=1)
-                    ),
-                    text=conv2_df['Conv_Label'],
-                    textposition='outside',
-                    textfont=dict(color='#ffffff', size=10),
-                    hovertemplate='<b>%{y}</b><br>Conversion: %{x:.4f}%<extra></extra>'
-                )])
-                
-                fig4.update_layout(
-                    paper_bgcolor='rgba(0,0,0,0)',
-                    plot_bgcolor='rgba(0,0,0,0)',
-                    font=dict(color='#ffffff', family='Poppins'),
-                    xaxis_title='Conversion Rate (%)',
-                    yaxis_title='',
-                    height=400 if view_option == 'Per Category' else 500,
-                    margin=dict(l=200 if view_option == 'Per Promo' else 100, r=60, t=20, b=60)
-                )
-                fig4.update_xaxes(gridcolor='rgba(255,255,255,0.1)', tickfont=dict(color='#ffffff'))
-                fig4.update_yaxes(tickfont=dict(color='#ffffff', size=10))
-                
-                st.plotly_chart(fig4, use_container_width=True)
+            # Chart 4: Conversion Rate (Count/NOC)
+            st.markdown(f'<p class="section-title">👥 Conversion Rate - Count/NOC (by {view_option.replace("Per ", "")})</p>', unsafe_allow_html=True)
+            
+            fig4 = create_bar_chart(
+                df_sales, 'Conversion Rate (Count/NOC)', 'Label',
+                '', 'Conversion Rate (%)',
+                'Oranges', label_format='percent_detail',
+                show_detail=True, detail_cols=['Total Count', 'NOC']
+            )
+            st.plotly_chart(fig4, use_container_width=True)
             
             # Data Table
             st.markdown('<p class="section-title">📋 Data Table</p>', unsafe_allow_html=True)
-            
             with st.expander("🔍 Lihat Detail Data", expanded=False):
-                st.dataframe(display_df, use_container_width=True, height=300)
+                st.dataframe(df_sales, use_container_width=True, height=300)
     
     # ==================== TAB QTY ====================
     with tab_qty:
-        if filtered_qty.empty:
+        if df_qty.empty:
             st.warning("⚠️ Tidak ada data Qty untuk kategori yang dipilih.")
         else:
-            # Prepare data based on view
-            if view_option == 'Per Promo':
-                display_qty = filtered_qty.copy()
-                display_qty['Label'] = display_qty['Nama Promo']
-                conv_claim_col_qty = 'Conversion Rate(Claim/Count)'
-                conv_noc_col_qty = 'Conversion Rate(Count/NOC)'
-            else:
-                display_qty = aggregate_qty_by_category(filtered_qty)
-                display_qty['Label'] = display_qty['Category']
-                conv_claim_col_qty = 'Conversion Rate(Claim/Count)'
-                conv_noc_col_qty = 'Conversion Rate(Count/NOC)'
-            
             # KPI Cards
             st.markdown("### 📈 Key Performance Indicators")
             
             col1, col2, col3 = st.columns(3)
             
-            total_promo_qty = len(filtered_qty) if view_option == 'Per Promo' else display_qty['Jumlah Promo'].sum()
-            avg_conv_claim_qty = display_qty[conv_claim_col_qty].mean()
-            avg_conv_noc_qty = display_qty[conv_noc_col_qty].mean()
+            total_promo_qty = len(df_qty)
+            avg_conv_claim_qty = df_qty['Conversion Rate (Claim/Count)'].mean()
+            avg_conv_noc_qty = df_qty['Conversion Rate (Count/NOC)'].mean()
             
             with col1:
                 st.markdown(f"""
                 <div class="metric-container">
-                    <div class="metric-value">{int(total_promo_qty)}</div>
-                    <div class="metric-label">🎯 Jumlah Promo</div>
+                    <div class="metric-value">{total_promo_qty}</div>
+                    <div class="metric-label">🎯 Jumlah {'Promo' if view_option == 'Per Promo' else 'Category'}</div>
                 </div>
                 """, unsafe_allow_html=True)
             
             with col2:
                 st.markdown(f"""
                 <div class="metric-container">
-                    <div class="metric-value">{format_percent(avg_conv_claim_qty)}</div>
-                    <div class="metric-label">📊 Avg Conv. (Claim/Count)</div>
+                    <div class="metric-value">{avg_conv_claim_qty*100:.2f}%</div>
+                    <div class="metric-label">📊 Avg Claim/Count</div>
                 </div>
                 """, unsafe_allow_html=True)
             
             with col3:
                 st.markdown(f"""
                 <div class="metric-container">
-                    <div class="metric-value">{format_percent(avg_conv_noc_qty)}</div>
-                    <div class="metric-label">👥 Avg Conv. (Count/NOC)</div>
+                    <div class="metric-value">{avg_conv_noc_qty*100:.4f}%</div>
+                    <div class="metric-label">👥 Avg Count/NOC</div>
                 </div>
                 """, unsafe_allow_html=True)
             
             st.markdown("<br>", unsafe_allow_html=True)
             
-            # Chart 3 & 4: Conversion Rates (Side by Side)
-            col_left, col_right = st.columns(2)
+            # Chart 1: Conversion Rate (Claim/Count)
+            st.markdown(f'<p class="section-title">🔄 Conversion Rate - Claim/Count (by {view_option.replace("Per ", "")})</p>', unsafe_allow_html=True)
             
-            with col_left:
-                st.markdown('<p class="section-title">🔄 Conversion Rate (Claim/Count)</p>', unsafe_allow_html=True)
-                
-                conv1_qty = display_qty.sort_values(conv_claim_col_qty, ascending=True).copy()
-                conv1_qty['Conv_Label'] = conv1_qty[conv_claim_col_qty].apply(lambda x: f'{x*100:.2f}%')
-                
-                fig5 = go.Figure(data=[go.Bar(
-                    x=conv1_qty[conv_claim_col_qty] * 100,
-                    y=conv1_qty['Label'],
-                    orientation='h',
-                    marker=dict(
-                        color=conv1_qty[conv_claim_col_qty],
-                        colorscale=[[0, '#ff6b6b'], [0.5, '#fee440'], [1, '#00f5d4']],
-                        line=dict(color='rgba(255,255,255,0.3)', width=1)
-                    ),
-                    text=conv1_qty['Conv_Label'],
-                    textposition='outside',
-                    textfont=dict(color='#ffffff', size=11),
-                    hovertemplate='<b>%{y}</b><br>Conversion: %{x:.2f}%<extra></extra>'
-                )])
-                
-                fig5.update_layout(
-                    paper_bgcolor='rgba(0,0,0,0)',
-                    plot_bgcolor='rgba(0,0,0,0)',
-                    font=dict(color='#ffffff', family='Poppins'),
-                    xaxis_title='Conversion Rate (%)',
-                    yaxis_title='',
-                    height=400 if view_option == 'Per Category' else 450,
-                    margin=dict(l=280 if view_option == 'Per Promo' else 100, r=60, t=20, b=60)
-                )
-                fig5.update_xaxes(gridcolor='rgba(255,255,255,0.1)', tickfont=dict(color='#ffffff'))
-                fig5.update_yaxes(tickfont=dict(color='#ffffff', size=10))
-                
-                st.plotly_chart(fig5, use_container_width=True)
+            fig5 = create_bar_chart(
+                df_qty, 'Conversion Rate (Claim/Count)', 'Label',
+                '', 'Conversion Rate (%)',
+                'Reds', label_format='percent_detail',
+                show_detail=True, detail_cols=['Total Claim', 'Total Count']
+            )
+            st.plotly_chart(fig5, use_container_width=True)
             
-            with col_right:
-                st.markdown('<p class="section-title">👥 Conversion Rate (Count/NOC)</p>', unsafe_allow_html=True)
-                
-                conv2_qty = display_qty.sort_values(conv_noc_col_qty, ascending=True).copy()
-                conv2_qty['Conv_Label'] = conv2_qty[conv_noc_col_qty].apply(lambda x: f'{x*100:.4f}%')
-                
-                fig6 = go.Figure(data=[go.Bar(
-                    x=conv2_qty[conv_noc_col_qty] * 100,
-                    y=conv2_qty['Label'],
-                    orientation='h',
-                    marker=dict(
-                        color=conv2_qty[conv_noc_col_qty],
-                        colorscale=[[0, '#ff6b6b'], [0.5, '#fee440'], [1, '#00f5d4']],
-                        line=dict(color='rgba(255,255,255,0.3)', width=1)
-                    ),
-                    text=conv2_qty['Conv_Label'],
-                    textposition='outside',
-                    textfont=dict(color='#ffffff', size=11),
-                    hovertemplate='<b>%{y}</b><br>Conversion: %{x:.4f}%<extra></extra>'
-                )])
-                
-                fig6.update_layout(
-                    paper_bgcolor='rgba(0,0,0,0)',
-                    plot_bgcolor='rgba(0,0,0,0)',
-                    font=dict(color='#ffffff', family='Poppins'),
-                    xaxis_title='Conversion Rate (%)',
-                    yaxis_title='',
-                    height=400 if view_option == 'Per Category' else 450,
-                    margin=dict(l=280 if view_option == 'Per Promo' else 100, r=60, t=20, b=60)
-                )
-                fig6.update_xaxes(gridcolor='rgba(255,255,255,0.1)', tickfont=dict(color='#ffffff'))
-                fig6.update_yaxes(tickfont=dict(color='#ffffff', size=10))
-                
-                st.plotly_chart(fig6, use_container_width=True)
+            # Chart 2: Conversion Rate (Count/NOC)
+            st.markdown(f'<p class="section-title">👥 Conversion Rate - Count/NOC (by {view_option.replace("Per ", "")})</p>', unsafe_allow_html=True)
+            
+            fig6 = create_bar_chart(
+                df_qty, 'Conversion Rate (Count/NOC)', 'Label',
+                '', 'Conversion Rate (%)',
+                'Oranges', label_format='percent_detail',
+                show_detail=True, detail_cols=['Total Count', 'NOC']
+            )
+            st.plotly_chart(fig6, use_container_width=True)
             
             # Data Table
             st.markdown('<p class="section-title">📋 Data Table</p>', unsafe_allow_html=True)
-            
             with st.expander("🔍 Lihat Detail Data", expanded=False):
-                st.dataframe(display_qty, use_container_width=True, height=300)
+                st.dataframe(df_qty, use_container_width=True, height=300)
     
     # Footer
     st.markdown("---")
