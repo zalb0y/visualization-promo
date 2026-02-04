@@ -107,8 +107,8 @@ with st.sidebar:
     st.markdown("---")
     st.markdown("### 📊 Dashboard Tersedia")
     st.markdown("""
-    - **Promo Dashboard** - Analisis performa promosi
-    - **Ended Promo** - Summary promo yang berakhir Jan 2026
+    - **Promo 2025**
+    - **Promo 2026**
     """)
 
 # Menu Cards
@@ -121,22 +121,22 @@ with col1:
     st.markdown("""
     <div class="menu-card">
         <div class="menu-icon">📊</div>
-        <div class="menu-title">Promo Dashboard</div>
-        <div class="menu-desc">Analisis performa promosi dan kontribusi terhadap Net Sales</div>
+        <div class="menu-title">Promo 2025/div>
+        <div class="menu-desc">Visualisasi performa promosi 2025</div>
     </div>
     """, unsafe_allow_html=True)
-    if st.button("Buka Promo Dashboard", use_container_width=True):
+    if st.button("Buka Dashboard, use_container_width=True):
         st.switch_page("pages/1_Promo_Dashboard.py")
 
 with col2:
     st.markdown("""
     <div class="menu-card">
         <div class="menu-icon">📈</div>
-        <div class="menu-title">Ended Promo</div>
-        <div class="menu-desc">Summary Promo yang Berakhir - January 2026</div>
+        <div class="menu-title">Promo 2026</div>
+        <div class="menu-desc">Visualisasi  performa promosi 2025</div>
     </div>
     """, unsafe_allow_html=True)
-    if st.button("Buka Ended Promo", use_container_width=True):
+    if st.button("Buka Dashboard", use_container_width=True):
         st.switch_page("pages/2_Ended_Promo.py")
 
 with col3:
