@@ -205,9 +205,14 @@ def main():
         st.stop()
     
     # Sidebar Filters
+    # Sidebar Filters
     with st.sidebar:
-        st.markdown("## 🎛️ Filter Data")
+        # Tombol kembali ke Home
+        if st.button("🏠 Kembali ke Home", use_container_width=True):
+            st.switch_page("app.py")
+        
         st.markdown("---")
+        st.markdown("## 🎛️ Filter Data")
         
         dataset_option = st.radio(
             "📁 Pilih Dataset",
